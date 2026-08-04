@@ -68,7 +68,7 @@ fsocity.dic: A custom dictionary file (~6.9MB) likely containing target-specific
 
 key-1-of-3.txt: Contains the first laboratory flag.
 
-//cat key-1-of-3.txt
+cat key-1-of-3.txt
 # Output: 073403c8a58a1f80d943455fb30724b9
 
 Flag 1: 073403c8a58a1f80d943455fb30724b9
