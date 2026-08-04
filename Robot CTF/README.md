@@ -1,4 +1,4 @@
-# Walkthrough: Mr. Robot CTF (Part 1)
+# Walkthrough: Mr. Robot CTF
 
 **Target Name:** Mr. Robot CTF  
 **Platform:** TryHackMe  
@@ -107,12 +107,7 @@ Using **CyberChef** (or terminal-based Base64 decoding via `echo "..." | base64 
   * **Username:** `elliot`
   * **Password:** `ER28-0652`
 
-# Walkthrough: Mr. Robot CTF (Part 2)
 
-**Target Name:** Mr. Robot CTF  
-**Platform:** TryHackMe  
-**Difficulty:** Medium  
-**Category:** Web / Exploitation / Privilege Escalation / CTF  
 
 ---
 
@@ -247,9 +242,3 @@ cat key-3-of-3.txt
 | **Flag 1** | `/key-1-of-3.txt` | `073403c8a58a1f80d943455fb30724b9` |
 | **Flag 2** | `/home/robot/key-2-of-3.txt` | `822c73956184f694993bede3eb39f959` |
 | **Flag 3** | `/root/key-3-of-3.txt` | `04787ddef27c3dee1ee161b21670b4e4` |
-
----
-
-## Next Steps
-
-With credentials for the `elliot` user account now recovered, the next logical step in the assessment is authenticating via the WordPress login interface at `/wp-login.php` to achieve administrative access within the CMS.
