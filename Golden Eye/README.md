@@ -41,15 +41,14 @@ hydra -l natalya -P /usr/share/wordlists/rockyou.txt <TARGET-IP> -s 55007 pop3
 
 Connect via POP3 to inspect Natalya's emails:
 
-    Message 1: Mentions supervisor details and warns about the crime syndicate Janus.
+Message 1: Mentions supervisor details and warns about the crime syndicate Janus.
+Message 2: Contains credentials for xenia and internal routing instructions:
 
-    Message 2: Contains credentials for xenia and internal routing instructions:
-
-        Username: xenia
-
-        Password: RCP90rulez!
-
-        Internal Domain Endpoint: severnaya-station.com/gnocertdir
+ ```bash 
+ Username: xenia
+ password: RCP90rulez!
+ Internal Domain Endpoint: severnaya-station.com/gnocertdir
+ ```
 
 ### 5. Local DNS Resolution (/etc/hosts)
 
@@ -130,11 +129,13 @@ Click Save changes.
 
    3. Triggering the Reverse Shell:
 
-    Start a Netcat listener on your Kali machine:
+Start a Netcat listener on your Kali machine:
+    ```bash
     nc -lvnp 443
+    ```
 
-    Create a new blog post via My profile $\rightarrow$ Blogs $\rightarrow$ Add a new entry.
-    Type text into the body editor and trigger the spellcheck functionality, executing the payload defined in the aspell path.
+Create a new blog post via My profile $\rightarrow$ Blogs $\rightarrow$ Add a new entry.
+Type text into the body editor and trigger the spellcheck functionality, executing the payload defined in the aspell path.
    
    4. Shell Caught:The shell connects back, granting execution as www-data:
 
