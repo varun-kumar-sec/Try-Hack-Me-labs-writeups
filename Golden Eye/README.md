@@ -134,9 +134,9 @@ Click Save changes.
 
    3. Triggering the Reverse Shell:
         Start a Netcat listener on your Kali machine:
-        ```bash
+```bash
     nc -lvnp 443
-    ```
+```
 
 Create a new blog post via My profile $\rightarrow$ Blogs $\rightarrow$ Add a new entry.
 
