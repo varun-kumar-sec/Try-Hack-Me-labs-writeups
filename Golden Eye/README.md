@@ -209,10 +209,10 @@ Run the binary to escalate privileges to root:
 
     ```bash
                cat /root/.flag.txt
-       ```
+    ```
 
 Contents of ```.flag.txt```:
-        ```bash 
+```bash 
             
              Alec told me to place the codes here:
             
@@ -220,4 +220,4 @@ Contents of ```.flag.txt```:
             
             If you captured this make sure to go here.....
             /006-final/xvf7-flag/
-        ```
+```
