@@ -24,9 +24,11 @@ Discovered Open Ports:
 
 ### 2. Web & Directory Enumeration
     
-    Access http://<TARGET-IP>/ in a browser and inspect the HTML page source.
-    Search for hidden comments, subdirectories, or potential usernames (e.g., boris, natalya, knut).
-    Brute-force POP3 logins using discovered usernames against port 55007.
+1. Access http://<TARGET-IP>/ in a browser and inspect the HTML page source.
+
+2. Search for hidden comments, subdirectories, or potential usernames (e.g., boris, natalya, knut).
+   
+3. Brute-force POP3 logins using discovered usernames against port 55007.
 
 ### 3. POP3 Brute-Forcing (boris / natalya)
 
