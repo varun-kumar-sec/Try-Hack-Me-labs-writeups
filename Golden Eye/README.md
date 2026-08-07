@@ -42,6 +42,7 @@ hydra -l natalya -P /usr/share/wordlists/rockyou.txt <TARGET-IP> -s 55007 pop3
 Connect via POP3 to inspect Natalya's emails:
 
 Message 1: Mentions supervisor details and warns about the crime syndicate Janus.
+
 Message 2: Contains credentials for xenia and internal routing instructions:
 
  ```bash 
@@ -53,60 +54,64 @@ Message 2: Contains credentials for xenia and internal routing instructions:
 ### 5. Local DNS Resolution (/etc/hosts)
 
 Add the local domain entry to /etc/hosts so your browser can resolve the internal path
-```sudo vim /etc/hosts```
+```bash 
+sudo vim /etc/hosts
+```
 
 Append entry:
-```<TARGET-IP> severnaya-station.com```
+```bash 
+<TARGET-IP> severnaya-station.com
+```
 
 ### 6. Moodle Portal Access & Secondary POP3 Crack
 
-    Navigate to http://severnaya-station.com/gnocertdir/ in your browser.
-    Log in with Xenia's credentials (xenia / RCP90rulez!).
-    Inspecting internal messages/profile reveals contact with Dr Doak.
-    Use Hydra to brute-force POP3 credentials for user doak:
+1. Navigate to http://severnaya-station.com/gnocertdir/ in your browser.
+2. Log in with Xenia's credentials (xenia / RCP90rulez!).
+3. Inspecting internal messages/profile reveals contact with Dr Doak.
+4. Use Hydra to brute-force POP3 credentials for user doak:
 
-    hydra -l doak -P /usr/share/set/src/fasttrack/wordlist.txt <TARGET-IP> -s 55007 pop3
+```bash
+hydra -l doak -P /usr/share/set/src/fasttrack/wordlist.txt <TARGET-IP> -s 55007 pop3
+```
+
 Discovered POP3 Credentials (doak):
 
+```bash
     Username: doak
-
     Password: goat
+```
 
 ### 7. Moodle Login (dr_doak) & Private Files Exploration
 
-    Log into POP3 (doak / goat) via telnet or nc to inspect email contents:
+1. Log into POP3 (doak / goat) via telnet or nc to inspect email contents:
+    Retrieved Web Credentials:
+    Username: ```dr_doak```
+    Password: ```4England!```
 
-        Retrieved Web Credentials:
+2. Log into the Moodle platform as ```dr_doak```.
+3. Access My profile $\rightarrow$ My private files to find:
+    Folder: ```for james```
+    File: ```s3cret.txt```
 
-            Username: dr_doak
-
-            Password: 4England!
-
-            Log into the Moodle platform as dr_doak.
-
-            Access My profile $\rightarrow$ My private files to find:
-            
-            Folder: for james
-            
-            File: s3cret.txt
+---    
 
 ## Steganography & Administrative RCE
-
 ### 8. Extracting Admin Credentials via Steganography
 
-    Reading s3cret.txt:
+1. Reading ```s3cret.txt```:
+    The file inside Dr. Doak's private files contains a note referencing an image at ```/dir007key/for-007.jpg```.
 
-    The file inside Dr. Doak's private files contains a note referencing an image at /dir007key/for-007.jpg.
+2. Inspecting Metadata:
+    Download and run ```exiftool``` on ```for-007.jpg``` to discover a Base64-encoded string hidden in the Image Description field:
 
-    Inspecting Metadata:
+```eFdpbnRlclJjcjE5OTVXIQ==```
 
-Download and run exiftool on for-007.jpg to discover a Base64-encoded string hidden in the Image Description field:
+3. Decoding the Base64 String:
 
-eFdpbnRlclJjcjE5OTVXIQ==
-
-Decoding the Base64 String:
-```echo eFdpbnRlclJjcjE5OTVXIQ== | base64 -d```
-Decoded Admin Password: xWinter1995x!
+```bash
+echo eFdpbnRlclJjcjE5OTVXIQ== | base64 -d
+```
+Decoded Admin Password: ```xWinter1995x!```
 
 ### 9. Moodle Administration & RCE Execution
 
