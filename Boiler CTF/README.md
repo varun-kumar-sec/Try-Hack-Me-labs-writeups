@@ -32,9 +32,9 @@ Decoding via ROT13 yields:
     "Just wanted to see if you find it. Lol. Remember: Enumeration is the key!"
 
 ### 3. Web & Hidden Directory Discovery
-Running directory enumeration on the Apache server reveals /joomla/ and /robots.txt.
+Running directory enumeration on the Apache server reveals /```joomla```/ and /```robots.txt```.
 
-- Converting the ASCII sequence found in robots.txt produces a Base64 string, which decodes to a fake MD5 hash (a rabbit hole).
+- Converting the ASCII sequence found in ```robots.txt``` produces a Base64 string, which decodes to a fake MD5 hash (a rabbit hole).
 
 ---
 
