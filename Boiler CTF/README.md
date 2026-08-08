@@ -104,7 +104,7 @@ cat backup.sh
       cd /home/stoner
       cat .secret
 ```
-User Flag: ```You made it till here, well done.```
+### User Flag: You made it till here, well done.
 
 ### 8. Enumeration with LinPEAS
 Transfer and execute ```linpeas.sh``` or enumerate binaries manually. LinPEAS flags ```/usr/bin/find``` under Files with Interesting Permissions (SUID):
