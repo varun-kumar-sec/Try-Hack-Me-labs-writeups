@@ -90,19 +90,19 @@ cat backup.sh
 
 ```bash
         USER=stoner
-#superduperp@ssno1knows
+        #superduperp@ssno1knows
 ```
 3. Switch user to ```stoner```:
 
 ```bash
       su stoner
-# Password: superduperp@ssno1knows
+      # Password: superduperp@ssno1knows
 ```
 4. Navigate to stoner's home directory and read the user flag:
 
 ```bash
       cd /home/stoner
-cat .secret
+      cat .secret
 ```
 User Flag: ```You made it till here, well done.```
 
@@ -127,10 +127,10 @@ Verify effective root privileges and read ```root.txt```:
 
 ```bash
       whoami
-# Output: root
+      # Output: root
 
-cd /root
-cat root.txt
+      cd /root
+      cat root.txt
 ```
 
-Root Flag: ```It wasn't that hard, was it?```
+### Root Flag: It wasn't that hard, was it?
