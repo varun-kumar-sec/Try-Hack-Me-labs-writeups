@@ -16,6 +16,6 @@ nmap -sV -sC -p- 10.48.177.194
 ```
 Scan Results:
 
-| Port	  |  State	| Service	| Version / Info |
-| 22/tcp	|Open	    | SSH	    | OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 |
-| 80/tcp	|Open	    | HTTP	  | Golang net/http server (Go-IPFS json-rpc or InfluxDB API) |
+Port,State,Service,Version / Info
+22/tcp,Open,SSH,OpenSSH 7.6p1 Ubuntu 4ubuntu0.3
+80/tcp,Open,HTTP,Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
