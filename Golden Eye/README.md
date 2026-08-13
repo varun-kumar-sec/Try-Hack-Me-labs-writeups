@@ -141,7 +141,7 @@ Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_6
 ### 11. Exploit Execution: overlayfs (CVE-2015-1328)
 The target running Ubuntu with Kernel ```3.13.0-32``` is vulnerable to the overlayfs local privilege escalation exploit (Exploit-DB ID: ```37292```).
 
-1.Host Attacker Web Server:
+1. Host Attacker Web Server:
 Serve the exploit C code (```37292.c```) using Python on your Kali machine:
 ```bash 
 python3 -m http.server 8081
