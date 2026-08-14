@@ -9,3 +9,4 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 - [x] Boiler CTF
 - [x] Golden Eye CTF
 - [x] Stux CTF
+- [x] Wonderland CTF 
