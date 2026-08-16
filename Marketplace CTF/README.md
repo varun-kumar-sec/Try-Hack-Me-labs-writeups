@@ -100,8 +100,8 @@ document.body.appendChild(image);
 ```
 - Observation: The browser appends an <img> tag to the DOM. The network request triggers an outbound connection to the local listener on port 8080, confirming that document.cookie is accessible via client-side script execution.
 
-![image]()
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_33_42.png?raw=true)
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_34_38.png?raw=true)
 
 ## Step 2: Preparing and Injecting the Stored Payload
 With outbound exfiltration confirmed, format the JavaScript payload with proper HTML tags so it executes automatically whenever an admin renders the listing page.
@@ -115,35 +115,35 @@ With outbound exfiltration confirmed, format the JavaScript payload with proper 
 ```
 Injection: Navigate to /new ("Add new listing"). Enter a standard title (e.g., phone) and paste the malicious script block into the Description field. Submit the form to store the payload persistently in the database.
 
-![image]()
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_36_15.png?raw=true)
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_38_25.png?raw=true)
 
 ## Step 3: Triggering Admin Review & Capturing Token
 Once the item is published, utilize the application's reporting mechanism to direct the automated administrator bot to the stored payload.
 - Action: Navigate to the newly created listing (/item/<id>) and click "Report listing to admins" (/report/<id>).
 - Listener Output: The admin bot visits the page, executing the script in its context. The Python HTTP listener running on Kali receives a GET request appended with the administrator's token parameter.
 
-![image]()
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_38_35.png?raw=true)
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_40_01.png?raw=true)
 
 ### Step 4: JWT Analysis & Session Replacement
 Extract the administrator's JSON Web Token (JWT) from the HTTP logs to analyze its payload and replace your current session cookie.
 - Token Extraction: Copy the full raw JWT string from the incoming HTTP request path.
 
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_40_28.png?raw=true)
 
 JWT Decoding: Paste the token into jwt.io to inspect the claims:
 - Header: Identifies the signing algorithm (HS256).
 - Payload: Decodes the claim data, confirming userId: 2, username: "michael", and elevated privileges (admin: true).
 
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_41_27.png?raw=true)
 
 Session Hijacking:
 - Open Developer Tools -> Storage -> Cookies ([http://10.48.164.96](http://10.48.164.96)).
 - Locate the existing token key and replace its value with the exfiltrated admin JWT.
 - Refresh the page to assume the administrative context.
 
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_42_31.png?raw=true)
 
 ---
 
@@ -155,7 +155,7 @@ After updating the local session token with the exfiltrated admin JWT, access to
 ```bash
 THM{c37a63895910e478f28669b048c348d5}
 ```
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_42_59.png?raw=true)
 
 ## Step 2: Identifying SQL Injection in the Admin Panel
 Inspecting administrative sub-pages reveals an input validation flaw in parameter handling.
@@ -168,8 +168,8 @@ Error Output: The application returns a verbose MySQL syntax error:
 ```bash
 Error: ER_PARSE_ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near "'' at line 1
 ```
-![image]()
-![image]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_43_56.png?raw=true)
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_44_30.png?raw=true)
 
 ### Step 3: Database Automated Exploitation via SQLmap
 Leverage sqlmap with the captured administrative JWT to exploit the UNION-based SQL injection vulnerability and dump backend databases.
@@ -182,8 +182,8 @@ Execution Results:
 - Database Identified: marketplace
 - Tables Dumped: users, items, messages
 
-![]()
-![]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_51_09.png?raw=true)
+![](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_51_11.png?raw=true)
 
 ## Step 4: Extracting Credentials & Analysis
 Analyzing the dumped database content yields sensitive system communications and user credentials.
@@ -193,8 +193,8 @@ Database Contents Analysis (Mousepad view):
 ```bash
 Hello!\r\nAn automated system has detected your SSH password is too weak and needs to be changed. You have been generated a new temporary password.\r\nYour new password is: @b_ENXkGYUCAv3zJ
 ```
-![]()
-![]()
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_53_18.png?raw=true)
+![image](https://github.com/varun-kumar-sec/Try-Hack-Me-labs-writeups/blob/main/Marketplace%20CTF/image/Screenshot_2026-08-12_09_53_42.png?raw=true)
 
 ## Step 5: SSH Authenticated Access & User Flag Capture
 Use the recovered SSH password to authenticate as jake against the target system host and extract the user flag.
