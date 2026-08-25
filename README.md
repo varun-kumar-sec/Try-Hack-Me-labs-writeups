@@ -3,6 +3,9 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 
 ---
 
+# Privilege Escalation:- 
+- [x] Sudo Security Bypass
+
 # Medium CTF:- 
 - [x] Willow CTF
 - [x] Robots CTF
@@ -10,3 +13,4 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 - [x] Golden Eye CTF
 - [x] Stux CTF
 - [x] Wonderland CTF 
+
