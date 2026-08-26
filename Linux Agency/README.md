@@ -202,3 +202,77 @@ su mission14
 | Mission 13 | mission12    | Insecure File Ownership / Permission Override (chmod) | mission13{076124e360406b4c98ecefddd13ddb1f} | 
 | Mission 14 | mission13    | Base64 Encoding Obfuscation (base64 --decode)         | mission14{d598de95639514b9941507617b9e54d2} | 
 | Mission 15 | mission14    | Binary Encoding Obfuscation (CyberChef From Binary)   | mission15{fc4915d818bfaeff01185c3547f25596} |
+
+## Executive Summary (Part 4)
+This report documents Part 4 of the penetration testing engagement on Linux Agency. Operations progressed sequentially from user ```mission15``` through ```mission21```, focusing on Hex decoding, binary executable execution, code compilation, and interpreter runtime execution to extract flags for Missions 16 through 21.
+
+## 1. Lateral Movement & Flag Progression Chain
+Phase 1: User ```mission15``` $\rightarrow$ ```mission16```
+1. Authenticated as ```mission15``` and read the hex-encoded string inside ```/home/mission15/flag.txt```:
+```bash
+6D697373696F6E31367B38383434313764343030333363346332303931623434643763323661393038657D
+```
+2. Decoded the payload via CyberChef using the ```From Hex``` operation (```Delimiter: None```).
+3. Mission 16 Flag: ```mission16{884417d40033c4c2091b44d7c26a908e}```
+
+Phase 2: User ```mission16``` $\rightarrow$ ```mission17```
+
+1. Authenticated as ```mission16``` and inspected file types in ```/home/mission16```:
+```bash
+file flag
+```
+2. Confirmed ```flag``` was a 64-bit ELF shared object executable. Granted execution permissions and executed the binary:
+```bash
+chmod +x flag
+./flag
+```
+3. Mission 17 Flag: ```mission17{49f8d1348a1053e221dfe7ff99f5cbf4}```
+
+Phase 3: User ```mission17``` $\rightarrow$ ```mission18```
+1. Authenticated as ```mission17``` and listed contents of ```/home/mission17```.
+2. Found ```flag.java``` source file, compiled it using Java compiler, and executed the class:
+```bash
+javac flag.java
+java flag
+```
+3. Mission 18 Flag: ```mission18{f09760649986b489cda320ab5f7917e8}```
+
+Phase 4: User ```mission18``` $\rightarrow$ ```mission19```
+
+1. Authenticated as ```mission18``` and identified ```flag.rb``` (Ruby script).
+2. Modified permissions and executed the script using the Ruby interpreter:
+```bash
+chmod 777 flag.rb
+ruby flag.rb
+```
+3. Mission 19 Flag: ```mission19{a0bf41f56b3ac622d808f7a4385254b7}```
+
+Phase 5: User ```mission19``` $\rightarrow$ ```mission20```
+1. Authenticated as ```mission19``` and identified ```flag.c``` (C source file).
+2. Adjusted permissions, compiled using GCC, and executed the binary:
+```bash
+chmod 777 flag.c
+gcc flag.c -o flag
+./flag
+```
+3. Mission 20 Flag: ```mission20{b0482f9e90c8ad2421bf4353cd8eae1c}```
+
+Phase 6: User ```mission20``` $\rightarrow$ ```mission21```
+1. Authenticated as ```mission20``` and identified ```flag.py``` (Python script).
+2. Adjusted permissions and ran the script with Python 3:
+```bash
+chmod 777 flag.py
+python3 flag.py
+```
+3. Mission 21 Flag: ```mission21{7de756aabc528b446f6eb38419318f0c}```
+
+## 2. Summary of Captured Flags (Part 4)
+
+| Mission    | User Context | Extraction / Execution Method                      | Flag Value                                  | 
+| :--        | :--          | :--                                                | :--                                         |
+| Mission 16 | mission15    | Hex Payload Decoding (From Hex)                    | mission16{884417d40033c4c2091b44d7c26a908e} | 
+| Mission 17 | mission16    | ELF Executable Permission & Run (./flag)           | mission17{49f8d1348a1053e221dfe7ff99f5cbf4} | 
+| Mission 18 | mission17    | Java Source Compilation & Execution (javac / java) | mission18{f09760649986b489cda320ab5f7917e8} | 
+| Mission 19 | mission18    | Ruby Script Execution (ruby flag.rb)               | mission19{a0bf41f56b3ac622d808f7a4385254b7} | 
+| Mission 20 | mission19    | C Source Compilation & Binary Run (gcc / ./flag)   | mission20{b0482f9e90c8ad2421bf4353cd8eae1c} | 
+| Mission 21 | mission20    | Python 3 Script Execution (python3 flag.py)        | mission21{7de756aabc528b446f6eb38419318f0c} | 
