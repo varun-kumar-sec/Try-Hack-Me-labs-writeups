@@ -6,6 +6,7 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 # Privilege Escalation:- 
   - [x] Sudo Security Bypass
   - [x] Sudo Buffer Overflow
+  - [x] Linux Agency 
 
 ---
 
