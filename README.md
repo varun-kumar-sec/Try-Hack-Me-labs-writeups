@@ -5,11 +5,11 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 
 # Privilege Escalation:- 
   - [x] Linux Privilege Escalation
+  - [x] Linux PrivEsc
   - [x] Linux Agency
   - [x] Linux PrivEsc Arena
   - [x] Sudo Security Bypass
   - [x] Sudo Buffer Overflow
-  - [x] Linux Agency
   - [x] Ignite
 
 ---
