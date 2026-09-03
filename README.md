@@ -8,12 +8,22 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Linux PrivEsc
   - [x] Linux Agency
   - [x] Linux PrivEsc Arena
+  - [x] Windows Privilege
+  - [x] Windows Privilege Arena
   - [x] Sudo Security Bypass
   - [x] Sudo Buffer Overflow
   - [x] Ignite
+  - [x] Blaster
+  - [x] Pickle Rick 
 
 ---
 
+# WEB:- 
+  - [x] HTTP in Detail
+  - [x] Vulnerabilities 101
+
+
+---
 
 # Medium CTF:- 
   - [x] Willow CTF
@@ -27,4 +37,5 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Marketplace CTF
   - [x] Mindgames CTF
   - [x] Nax CTF
+ 
 
