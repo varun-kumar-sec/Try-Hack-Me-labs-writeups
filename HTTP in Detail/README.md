@@ -16,11 +16,11 @@
 
 Lab Questions Reference
 - Q: What does HTTP stand for?
-  - A: ```HyperText Transfer Protocol```
+- ```HyperText Transfer Protocol```
 - Q: What does HTTPS stand for?
-  - A: ```HyperText Transfer Protocol Secure```
+```HyperText Transfer Protocol Secure```
 - Q: On the mock webpage on the right there is an issue, once you've found it, click on it. What is the challenge flag?  
-  - A: ```THM{INVALID_HTTP_CERT}```
+```THM{INVALID_HTTP_CERT}```
 
 ## Module 2: Requests and Responses
 1. Anatomy of a URL (Uniform Resource Locator)
@@ -154,3 +154,4 @@ Cookies are small pieces of data stored on a client's computer by the web browse
 Lab Questions Reference
 - Which header is used to save cookies to your computer?
 ```Set-Cookie```
+
