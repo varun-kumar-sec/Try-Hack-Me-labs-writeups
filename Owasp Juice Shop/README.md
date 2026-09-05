@@ -1,4 +1,4 @@
-# OWASP Juice Shop — Complete Technical Exploitation Report
+# OWASP Juice Shop — Technical Exploitation Report
 
 ---
 
