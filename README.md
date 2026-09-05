@@ -21,6 +21,7 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 # WEB:- 
   - [x] HTTP in Detail
   - [x] Vulnerabilities 101
+  - [x] OWASP Juice Shop
 
 
 ---
