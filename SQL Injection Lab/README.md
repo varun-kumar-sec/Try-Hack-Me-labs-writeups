@@ -324,8 +324,10 @@ sqlmap -u "http://10.48.174.24:5000/challenge3/login" \
     - Dumped the ```users``` table schema and full row entries.
 
 Summary Table: Module 5 Details
-| Parameter / Entity       | Target / Value                                                                                                                                     | | :--                      | :--                                                                                                                                                |
-| Target Endpoint          | [http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)                                                             |
-| Vulnerable Parameter     | username                                                                                                                                           |
-| Exploit Technique        | Boolean-Based Blind SQL Injection                                                                                                                  |
-| Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                                                                              |
+
+| Parameter / Entity       | Target / Value                                                                         |
+|:--                       |:--                                                                                     |
+| Target Endpoint          | [http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login) |
+| Vulnerable Parameter     | username                                                                               |                                                           
+| Exploit Technique        | Boolean-Based Blind SQL Injection                                                      |                                                            
+| Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                  |                                                            
