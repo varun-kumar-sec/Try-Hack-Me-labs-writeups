@@ -61,5 +61,4 @@ Summary Table: Module 1 Answers
 | SQL Injection 1: Input Box Non-String  | Form Input (Integer),1 or 1=1--   | THM{dccea429d73d4a6b4f117ac64724f460}  |
 | SQL Injection 2: Input Box String      | Form Input (String),1' or 1=1--   | THM{356e9de6016b9ac34e02df99a5f755ba}  | 
 | SQL Injection 3: URL Injection         | URL GET Parameter,1' or 1=1--     | THM{645eab5d34f81981f5705de54e8a9c36}  |
-
 | SQL Injection 4: POST Injection        | HTTP POST Body,1'or 1=1--         | THM{727334fd0f0ea1b836a8d443f09dc8eb}  | 
