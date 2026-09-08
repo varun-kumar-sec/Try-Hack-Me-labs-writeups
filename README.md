@@ -23,7 +23,8 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Vulnerabilities 101
   - [x] OWASP Juice Shop
   - [x] Juicy details
-  - [ ]  
+  - [x] SQL Injection Lab
+  - [ ]    
 
 
 ---
