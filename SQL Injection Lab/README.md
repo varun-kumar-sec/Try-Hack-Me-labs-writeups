@@ -413,3 +413,72 @@ Module Summary Table
 | Vulnerable Injection Parameter  | "username (Stored via /signup, executed via /notes)"                          |
 | Exfiltration Payload            | "' union select 1,group_concat(password) from users'"                         | 
 | Captured Flag                   | THM{4644c7e157fd5498e7e4026c89650814}                                         |
+
+## SQL Injection Lab (Module 7)
+Executive Summary
+This document outlines the security analysis and step-by-step exploitation for Task 8: Vulnerable Startup: Change Password (Challenge 5) on TryHackMe. The application suffers from a secondary/stored SQL injection in its password reset logic. While user input for the new password is properly parameterized, the application unsafely concatenates the stored ```username``` parameter into an ```UPDATE``` query when a user changes their password, allowing an attacker to overwrite another user's (specifically ```admin```) password without authorization.
+
+Target & Vulnerability Overview
+- Target Application: Change Password ```([http://10.48.174.24:5000/challenge5/](http://10.48.174.24:5000/challenge5/))```
+- Target Endpoints: ```/signup```, ```/login```, ```/changepwd```, ```/home```
+- Vulnerability Class: Stored SQL Injection (Second-Order SQL Injection in ```UPDATE``` Query)
+- Vulnerable Parameter: ```username``` (Stored at ```/signup```, dynamically concatenated at ```/changepwd```)
+- Objective: Exploit the vulnerable ```UPDATE``` query to reset the administrator's password, log in as ```admin```, and capture the final challenge flag.
+
+Vulnerability Mechanism Analysis
+1. Incorrect Assumption of Data Safety
+The application backend uses parameterized queries for inputs received directly from the browser during the password reset form submission. However, the developer assumed that the ```username``` field—retrieved internally from the database based on the active session ```user_id```—was safe from injection and concatenated it directly into the SQL string.
+2. Intended vs. Vulnerable Query Logic
+- Developer's Intended Query Structure:
+```sql
+UPDATE users SET password = ? WHERE username = '' + username + ''
+```
+- Vulnerable Concatenation Flow:
+When a user registers with the username ```admin'-- -```, the database safely stores literal ```admin'-- -``` via parameterization. When this user triggers the ```/changepwd``` route, the application builds the update query dynamically:
+```sql
+UPDATE users SET password = ? WHERE username = 'admin'-- -'
+```
+The single quote breaks out of the string literal, and the SQL comment ```-- -``` truncates the trailing quote. Consequently, the query updates the ```password``` field for the actual ```admin``` user instead of the session owner.
+
+Step-by-Step Exploitation Walkthrough
+Step 1: Account Creation with Malicious Payload
+Navigate to ```[http://10.48.174.24:5000/challenge5/signup](http://10.48.174.24:5000/challenge5/signup)``` and register a new account with the SQL payload embedded in the username field.
+- Registration Fields:
+    - Username: ```admin'-- -```
+    - Password: ```aaa``` (or any arbitrary temporary password)
+
+Step 2: Authenticate as the Malicious User
+Navigate to ```[http://10.48.174.24:5000/challenge5/login](http://10.48.174.24:5000/challenge5/login)``` and authenticate into the newly created account.
+- Login Credentials:
+    - Username: ```admin'-- -```
+    - Password: ```aaa```
+
+Step 3: Trigger Password Overwrite via ```/changepwd```
+Navigate to ```[http://10.48.174.24:5000/challenge5/changepwd](http://10.48.174.24:5000/challenge5/changepwd)``` and submit the password update form to overwrite the ```admin``` password.
+- Password Change Fields:
+    - Current Password: ```aaa```
+    - New Password: ```123```
+    - Confirm New Password: ```123```
+- Executed Server-Side SQL Statement:
+```sql
+UPDATE users SET password = ? WHERE username = 'admin'-- -'
+```
+- Result: The database updates the password of the record ```WHERE username = 'admin'```, setting the administrator's password to ```123```.
+
+Step 4: Authenticate as Administrator & Retrieve Flag
+1. Log out of the current session or return to ```[http://10.48.174.24:5000/challenge5/login](http://10.48.174.24:5000/challenge5/login)```.
+2. Authenticate using the administrator credentials:
+    - Username: ```admin```
+    - Password: ```123```
+3. Upon successful login, navigate to ```/home``` to read the administrator dashboard message.
+
+Summary Table: Module 7 Details
+| Parameter / Entity         | Target / Value                                                                |
+|:--                         |:--                                                                            |
+| Target Endpoint            | [http://10.48.174.24:5000/challenge5/](http://10.48.174.24:5000/challenge5/)  |
+| Vulnerable Function        | Password Change Logic (/changepwd)                                            |
+| Vulnerability Type         | Stored / Second-Order SQL Injection in UPDATE Query                           | 
+| Registration Payload       | admin'-- -                                                                    |
+| Target Password Reset      | Overwrote admin password to 123                                               | 
+| Captured Flag              | THM{cd5c4f197d708fda06979f13d8081013}                                         |
+
