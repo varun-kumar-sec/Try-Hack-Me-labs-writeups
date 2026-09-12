@@ -25,7 +25,9 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Juicy details
   - [x] SQL Injection Lab
   - [x] Bolt
-  - [x] Overpass    
+  - [x] Overpass
+  - [x] Basic Pentesting
+  - [x] Year of the Rabbit      
 
 
 ---
