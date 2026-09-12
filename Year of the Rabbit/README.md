@@ -1,4 +1,4 @@
-# technical writeup :- TryHackMe - Year of the Rabbit
+# Technical Writeup :- TryHackMe - Year of the Rabbit
 
 ---
 
