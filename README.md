@@ -27,7 +27,8 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Bolt
   - [x] Overpass
   - [x] Basic Pentesting
-  - [x] Year of the Rabbit      
+  - [x] Year of the Rabbit
+  - [x] Jack of all trades      
 
 
 ---
