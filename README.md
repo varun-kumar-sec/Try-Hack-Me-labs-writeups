@@ -17,6 +17,11 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Pickle Rick 
 
 ---
+# Scripting
+ - [x] Python Basics
+
+
+---
 
 # WEB:- 
   - [x] HTTP in Detail
