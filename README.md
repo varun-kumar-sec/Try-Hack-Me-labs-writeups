@@ -19,7 +19,7 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 ---
 # Scripting
  - [x] Python Basics
-
+ - [x] Peak Hill 
 
 ---
 
