@@ -29,8 +29,8 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Basic Pentesting
   - [x] Year of the Rabbit
   - [x] Jack of all trades
-  - [x] Develpy       
-
+  - [x] Develpy
+  - [x] SQL Injection      
 
 ---
 
