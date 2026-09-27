@@ -40,7 +40,8 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 ---
 
 # Active Directory
-  - [x] Attacktive Directory 
+  - [x] Attacktive Directory
+  - [x] Post-Exploitation Basics
 
 ---
 
