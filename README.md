@@ -43,6 +43,7 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Attacktive Directory
   - [x] Post-Exploitation Basics
   - [x] Enterprise
+  - [x] RazorBlack
 
 ---
 
