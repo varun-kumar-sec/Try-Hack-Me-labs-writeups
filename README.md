@@ -17,10 +17,18 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
   - [x] Pickle Rick 
 
 ---
+
 # Scripting
  - [x] Python Basics
  - [x] Peak Hill
  - [x] Bash Scripting
+
+---
+
+# Networking
+- [x] Intro to Networking 
+
+
 ---
 
 # WEB:- 
