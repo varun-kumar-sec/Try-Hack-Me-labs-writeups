@@ -26,8 +26,10 @@ A structured collection of TryHackMe lab writeups covering cybersecurity concept
 ---
 
 # Networking
-- [x] Intro to Networking 
-
+- [x] Intro to Networking
+- [x] What is Networking
+- [x] HTTP in Detail
+- [x] DNS In Detail
 
 ---
 
